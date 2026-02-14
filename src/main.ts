@@ -1,3 +1,6 @@
+import { Debug } from './util/debug'
+import { average } from './util/utils'
+
 const canvas = document.getElementById('main-canvas') as HTMLCanvasElement
 const context = canvas.getContext('2d')!
 
@@ -16,11 +19,51 @@ const clear = () => {
   context.fillRect(0, 0, width, height)
 }
 
-const update = () => {}
+const update = () => {
+  const updateStart = performance.now()
+  ////////////////////////////////
+  ////     Updates go here    ////
+  ////////////////////////////////
+
+  if (Math.random() < 0.01) {
+    console.log(`FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`)
+    console.log(`UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`)
+  }
+
+  const time = performance.now()
+  const updateTime = time - updateStart
+  Debug.updateTimes.push(updateTime)
+  Debug.updateTimes.shift()
+
+  Debug.updateFrames.push(time)
+  while (true) {
+    if (Debug.updateFrames[0] && Debug.updateFrames[0] < time - 999) {
+      Debug.updateFrames.shift()
+    } else {
+      break
+    }
+  }
+}
 
 const draw = () => {
+  const renderStart = performance.now()
+
   clear()
   context.drawImage(image, Math.floor(Math.random() * 100), Math.floor(Math.random() * 100))
+
+  const time = performance.now()
+  const renderTime = time - renderStart
+  Debug.renderTimes.push(renderTime)
+  Debug.renderTimes.shift()
+
+  Debug.renderFrames.push(time)
+  while (true) {
+    if (Debug.renderFrames[0] && Debug.renderFrames[0] < time - 999) {
+      Debug.renderFrames.shift()
+    } else {
+      break
+    }
+  }
 }
 
 let acc = 0
@@ -104,6 +147,9 @@ const run = async () => {
 //       fastForward2 = false
 //     }
 //   }
+
+  Debug.renderTimes = [...new Array(300)].map(_ => 0) // 5 seconds on 60fps monitors
+  Debug.updateTimes = [...new Array(300)].map(_ => 0) // ~5 seconds
 
   image.addEventListener('load', ready)
 
