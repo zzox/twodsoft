@@ -14,6 +14,27 @@ const tileHeight = height / TileSize
 
 let image:HTMLImageElement
 
+const keys = new Map<string, boolean>()
+
+const Guy = (vec:Vec3) => ({ vec, facing: FacingDir.Down })
+
+enum FacingDir {
+  Left,
+  Right,
+  Up,
+  Down
+}
+
+type Vec3 = {
+  x:number
+  y:number
+  z:number
+}
+
+const vec3 = (x:number, y:number, z:number):Vec3 => ({ x, y, z })
+
+const guy = Guy(vec3(100, 80, 12))
+
 console.log('we are alive', context)
 
 const bgColor = 'black'
@@ -32,13 +53,13 @@ const drawTile = (fromIndex:number, toIndex:number) => {
   )
 }
 
-const drawSprite = (x:number, y:number, index:number, width = 16, height = 16, sWidth = 16, sHeight = 16) => {
-  const tRowWidth = (image.width / sWidth)
-  const tRow = index % sWidth
+const drawSprite = (x:number, y:number, index:number, width = 16, height = 16) => {
+  const tRowWidth = (image.width / width)
+  const tRow = index % tRowWidth
   const tColumn = Math.floor(index / tRowWidth)
 
   context.drawImage(image,
-    tRow * TileSize, tColumn * TileSize, TileSize, TileSize,
+    tRow * width, tColumn * height, width, height,
     x, y, width, height
   )
 }
@@ -54,6 +75,26 @@ const update = () => {
   ////////////////////////////////
   ////     Updates go here    ////
   ////////////////////////////////
+
+  if (keys.get('ArrowUp')) {
+    guy.vec.y -= 1
+    guy.facing = FacingDir.Up
+  }
+
+  if (keys.get('ArrowDown')) {
+    guy.vec.y += 1
+    guy.facing = FacingDir.Down
+  }
+
+  if (keys.get('ArrowLeft')) {
+    guy.vec.x -= 1
+    guy.facing = FacingDir.Left
+  }
+
+  if (keys.get('ArrowRight')) {
+    guy.vec.x += 1
+    guy.facing = FacingDir.Right
+  }
 
   if (Math.random() < 0.01) {
     console.log(`FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`)
@@ -89,6 +130,8 @@ const draw = () => {
     drawTile(0, tileWidth * i - 1)
   }
 
+  drawSprite(guy.vec.x, guy.vec.y, 12 + guy.facing)
+
   // context.drawImage(image, Math.floor(Math.random() * 100), Math.floor(Math.random() * 100))
 
   const time = performance.now()
@@ -109,7 +152,7 @@ const draw = () => {
 let acc = 0
 let prev = 0
 
-let fps = 5
+let fps = 60
 let frameTime = 1000 / fps
 
 const next = (time:number) => {
@@ -163,20 +206,14 @@ const run = async () => {
   //   ),
   // );
 
-//   document.onkeydown = (event:KeyboardEvent) => {
-//     if (event.key === 'f') {
-//       fastForward = true
-//     } else if (event.key === 'g') {
-//       fastForward2 = true
-//     }
-//   }
-//   document.onkeyup = (event:KeyboardEvent) => {
-//     if (event.key === 'f') {
-//       fastForward = false
-//     } else if (event.key === 'g') {
-//       fastForward2 = false
-//     }
-//   }
+  document.onkeydown = (event:KeyboardEvent) => {
+    event.preventDefault()
+    keys.set(event.key, true)
+  }
+  document.onkeyup = (event:KeyboardEvent) => {
+    event.preventDefault()
+    keys.set(event.key, false)
+  }
 
   Debug.renderTimes = [...new Array(300)].map(_ => 0) // 5 seconds on 60fps monitors
   Debug.updateTimes = [...new Array(300)].map(_ => 0) // ~5 seconds
