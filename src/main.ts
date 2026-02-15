@@ -7,11 +7,30 @@ const context = canvas.getContext('2d')!
 const width = 240
 const height = 160
 
+const TileSize = 16
+
+const tileWidth = width / TileSize
+const tileHeight = height / TileSize
+
 let image:HTMLImageElement
 
 console.log('we are alive', context)
 
 const bgColor = 'black'
+
+const drawTile = (fromIndex:number, toIndex:number) => {
+  const tRowWidth = (image.width / TileSize)
+  const tRow = fromIndex % tRowWidth
+  const tColumn = Math.floor(fromIndex / tRowWidth)
+
+  const row = toIndex % tileWidth
+  const column = Math.floor(toIndex / tileWidth)
+
+  context.drawImage(image,
+    tRow * TileSize, tColumn * TileSize, TileSize, TileSize,
+    row * TileSize, column * TileSize, TileSize, TileSize
+  )
+}
 
 const clear = () => {
   // context.clearRect
@@ -49,7 +68,11 @@ const draw = () => {
   const renderStart = performance.now()
 
   clear()
-  context.drawImage(image, Math.floor(Math.random() * 100), Math.floor(Math.random() * 100))
+  for (let i = 0; i < tileWidth; i++) {
+    drawTile(0, i)
+  }
+
+  // context.drawImage(image, Math.floor(Math.random() * 100), Math.floor(Math.random() * 100))
 
   const time = performance.now()
   const renderTime = time - renderStart
@@ -69,7 +92,7 @@ const draw = () => {
 let acc = 0
 let prev = 0
 
-let fps = 30
+let fps = 5
 let frameTime = 1000 / fps
 
 const next = (time:number) => {
@@ -96,16 +119,6 @@ const resizeCanvas = () => {
   const h = canvas.height
   // overflow pixels
   const padding = 0
-
-  // specific sizing for mobile
-  // const availW = document.body.getBoundingClientRect().width < 800
-  //   ? document.body.getBoundingClientRect().width
-  //   // smallest width on 40 percent
-  //   : Math.min(canvas.parentElement!.getBoundingClientRect().width, document.body.getBoundingClientRect().width * .4)
-  
-  // const availH = document.body.getBoundingClientRect().width < 800
-  //   ? 612
-  //   : canvas.parentElement!.getBoundingClientRect().height
   
   const availW = canvas.parentElement!.getBoundingClientRect().width
   const availH = canvas.parentElement!.getBoundingClientRect().height
