@@ -32,6 +32,17 @@ const drawTile = (fromIndex:number, toIndex:number) => {
   )
 }
 
+const drawSprite = (x:number, y:number, index:number, width = 16, height = 16, sWidth = 16, sHeight = 16) => {
+  const tRowWidth = (image.width / sWidth)
+  const tRow = index % sWidth
+  const tColumn = Math.floor(index / tRowWidth)
+
+  context.drawImage(image,
+    tRow * TileSize, tColumn * TileSize, TileSize, TileSize,
+    x, y, width, height
+  )
+}
+
 const clear = () => {
   // context.clearRect
   context.fillStyle = bgColor
@@ -70,6 +81,12 @@ const draw = () => {
   clear()
   for (let i = 0; i < tileWidth; i++) {
     drawTile(0, i)
+    drawTile(0, (tileHeight - 1) * tileWidth + i)
+  }
+
+  for (let i = 0; i < tileHeight; i++) {
+    drawTile(0, tileWidth * i)
+    drawTile(0, tileWidth * i - 1)
   }
 
   // context.drawImage(image, Math.floor(Math.random() * 100), Math.floor(Math.random() * 100))
