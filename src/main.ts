@@ -1,74 +1,11 @@
+import { keys } from './core/keys'
+import { Scene } from './scenes/test-scene'
 import { Debug } from './util/debug'
 import { average } from './util/utils'
+import { clear, setContext, setImage } from './core/draw'
 
 const canvas = document.getElementById('main-canvas') as HTMLCanvasElement
-const context = canvas.getContext('2d')!
-
-const width = 240
-const height = 160
-
-const TileSize = 16
-
-const tileWidth = width / TileSize
-const tileHeight = height / TileSize
-
-let image:HTMLImageElement
-
-const keys = new Map<string, boolean>()
-
-const Guy = (vec:Vec3) => ({ vec, facing: FacingDir.Down })
-
-enum FacingDir {
-  Left,
-  Right,
-  Up,
-  Down
-}
-
-type Vec3 = {
-  x:number
-  y:number
-  z:number
-}
-
-const vec3 = (x:number, y:number, z:number):Vec3 => ({ x, y, z })
-
-const guy = Guy(vec3(100, 80, 12))
-
-console.log('we are alive', context)
-
-const bgColor = 'black'
-
-const drawTile = (fromIndex:number, toIndex:number) => {
-  const tRowWidth = (image.width / TileSize)
-  const tRow = fromIndex % tRowWidth
-  const tColumn = Math.floor(fromIndex / tRowWidth)
-
-  const row = toIndex % tileWidth
-  const column = Math.floor(toIndex / tileWidth)
-
-  context.drawImage(image,
-    tRow * TileSize, tColumn * TileSize, TileSize, TileSize,
-    row * TileSize, column * TileSize, TileSize, TileSize
-  )
-}
-
-const drawSprite = (x:number, y:number, index:number, width = 16, height = 16) => {
-  const tRowWidth = (image.width / width)
-  const tRow = index % tRowWidth
-  const tColumn = Math.floor(index / tRowWidth)
-
-  context.drawImage(image,
-    tRow * width, tColumn * height, width, height,
-    x, y, width, height
-  )
-}
-
-const clear = () => {
-  // context.clearRect
-  context.fillStyle = bgColor
-  context.fillRect(0, 0, width, height)
-}
+let scene:Scene
 
 const update = () => {
   const updateStart = performance.now()
@@ -76,25 +13,7 @@ const update = () => {
   ////     Updates go here    ////
   ////////////////////////////////
 
-  if (keys.get('ArrowUp')) {
-    guy.vec.y -= 1
-    guy.facing = FacingDir.Up
-  }
-
-  if (keys.get('ArrowDown')) {
-    guy.vec.y += 1
-    guy.facing = FacingDir.Down
-  }
-
-  if (keys.get('ArrowLeft')) {
-    guy.vec.x -= 1
-    guy.facing = FacingDir.Left
-  }
-
-  if (keys.get('ArrowRight')) {
-    guy.vec.x += 1
-    guy.facing = FacingDir.Right
-  }
+  scene.update()
 
   if (Math.random() < 0.01) {
     console.log(`FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`)
@@ -120,17 +39,7 @@ const draw = () => {
   const renderStart = performance.now()
 
   clear()
-  for (let i = 0; i < tileWidth; i++) {
-    drawTile(0, i)
-    drawTile(0, (tileHeight - 1) * tileWidth + i)
-  }
-
-  for (let i = 0; i < tileHeight; i++) {
-    drawTile(0, tileWidth * i)
-    drawTile(0, tileWidth * i - 1)
-  }
-
-  drawSprite(guy.vec.x, guy.vec.y, 12 + guy.facing)
+  scene.draw()
 
   // context.drawImage(image, Math.floor(Math.random() * 100), Math.floor(Math.random() * 100))
 
@@ -193,8 +102,10 @@ const resizeCanvas = () => {
 }
 
 const run = async () => {
-  image = new Image()
+  const image = new Image()
   image.src = './assets/tiles.png'
+  setImage(image)
+  setContext(canvas.getContext('2d')!)
 
   // const grid = makeGrid(11, 11)
 
@@ -222,6 +133,8 @@ const run = async () => {
 
   window.onresize = resizeCanvas
   resizeCanvas()
+
+  scene = new Scene()
 }
 
 run()
