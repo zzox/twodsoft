@@ -9,9 +9,6 @@ let scene:Scene
 
 const update = () => {
   const updateStart = performance.now()
-  ////////////////////////////////
-  ////     Updates go here    ////
-  ////////////////////////////////
 
   scene.update()
 
@@ -135,6 +132,7 @@ const run = async () => {
   resizeCanvas()
 
   scene = new Scene()
+  scene.create()
 }
 
 run()
