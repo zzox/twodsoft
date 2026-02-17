@@ -12,7 +12,7 @@ const update = () => {
 
   scene.update()
 
-  if (Math.random() < 0.01) {
+  if (Math.random() < 0.001) {
     console.log(`FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`)
     console.log(`UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`)
   }

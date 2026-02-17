@@ -2,6 +2,7 @@ import { TileHeight, TileSize, TileWidth } from '../core/const'
 import { drawSprite, drawTile, drawDebug } from '../core/draw'
 import { keys } from '../core/keys'
 import { Debug } from '../util/debug'
+import { collideWall, updatePhysics } from '../world/physics'
 
 enum FacingDir {
   Left,
@@ -21,12 +22,16 @@ type Vec2 = {
   y:number
 }
 
-const vec3 = (x:number, y:number, z:number):Vec3 => ({ x, y, z })
+export const vec3 = (x:number, y:number, z:number):Vec3 => ({ x, y, z })
 const vec2 = (x:number, y:number):Vec2 => ({ x, y })
 
-type Actor = {
+const clone3 = (vec:Vec3) => vec3(vec.x, vec.y, vec.z)
+
+// TODO: move to actors data
+export type Actor = {
   offset:Vec2
   pos:Vec3
+  last:Vec3
   vel:Vec3
   size:Vec3
   facing:FacingDir
@@ -37,19 +42,10 @@ type Actor = {
 //   pos:Vec3
 // }
 
-const newActor = (pos:Vec3, offset:Vec2) => ({ pos, facing: FacingDir.Down, size: vec3(8, 8, 8), offset, vel: vec3(0, 0, 0) })
+const newActor = (pos:Vec3, offset:Vec2) => ({ pos, facing: FacingDir.Down, size: vec3(8, 8, 8), last: clone3(pos), offset, vel: vec3(0, 0, 0) })
 
 const vel = 60
 const diagVel = vel / Math.SQRT2
-
-const updatePhysics = (actor:Actor) => {
-  actor.pos.x += actor.vel.x
-  actor.pos.y += actor.vel.y
-}
-
-// Returns true if two physics bodies overlap.
-const overlaps = (x1:number, y1:number, w1:number, h1:number, x2:number, y2:number, w2:number, h2:number):boolean =>
-  x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2
 
 const getFromWallIndex = (index:number):[number, number, number, number] => {
   const column = index % TileWidth
@@ -66,6 +62,9 @@ export class Scene {
   guy:Actor
   actors:Actor[] = []
   walls:number[] = []
+
+  // TEMP
+  // colliding = false
 
   constructor () {
     this.guy = newActor(vec3(100, 80, 12), vec2(4, 4))
@@ -148,7 +147,7 @@ export class Scene {
     this.walls.forEach(wallIndex => {
       const [x, y, w, h] = getFromWallIndex(wallIndex)
 
-      if (overlaps(this.guy.pos.x, this.guy.pos.y, 8, 8, x, y, w, h)) console.log('colliding')
+      collideWall(this.guy, x, y, w, h)
     })
   }
 
