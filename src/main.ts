@@ -133,6 +133,12 @@ const run = async () => {
       case 'd':
         Debug.on = !Debug.on
         break
+      case 'p':
+        console.log(
+          `FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us\n` +
+          `UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`
+        )
+        break
     }
     keys.set(event.key, true)
   }
