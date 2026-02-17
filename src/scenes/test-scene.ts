@@ -2,7 +2,9 @@ import { TileHeight, TileSize, TileWidth } from '../core/const'
 import { drawSprite, drawTile, drawDebug } from '../core/draw'
 import { keys } from '../core/keys'
 import { Debug } from '../util/debug'
+import { forEachGI, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
+import { Grid } from '../world/grid'
 
 enum FacingDir {
   Left,
@@ -47,21 +49,21 @@ const newActor = (pos:Vec3, offset:Vec2) => ({ pos, facing: FacingDir.Down, size
 const vel = 60
 const diagVel = vel / Math.SQRT2
 
-const getFromWallIndex = (index:number):[number, number, number, number] => {
-  const column = index % TileWidth
-  const row = Math.floor(index / TileWidth)
-  const x = column * TileSize
-  const y = row * TileSize
+const getWall = (x:number, y:number):[number, number, number, number] => {
+  const xx = x * TileSize
+  const yy = y * TileSize
   const w = TileSize
   const h = TileSize
 
-  return [x, y, w, h]
+  return [xx, yy, w, h]
 }
 
 export class Scene {
   guy:Actor
   actors:Actor[] = []
-  walls:number[] = []
+  // walls:number[] = []
+
+  walls:Grid<number>
 
   // TEMP
   // colliding = false
@@ -70,15 +72,17 @@ export class Scene {
     this.guy = newActor(vec3(100, 80, 12), vec2(4, 8))
     this.actors.push(this.guy)
 
+    this.walls = makeGrid(TileWidth, TileHeight, 1)
     for (let i = 0; i < TileWidth; i++) {
-      this.addTile(i)
-      this.addTile((TileHeight - 1) * TileWidth + i)
+      this.addTile(i, 0)
+      this.addTile(i, TileHeight - 1)
     }
 
     for (let i = 0; i < TileHeight; i++) {
-      this.addTile(TileWidth * i)
-      this.addTile(TileWidth * i - 1)
+      this.addTile(0, i)
+      this.addTile(TileWidth - 1, i)
     }
+    console.log(this.walls)
   }
 
   create () {
@@ -121,14 +125,15 @@ export class Scene {
   }
 
   draw () {
-    this.walls.forEach(wall => {
-      drawTile(0, wall)
+    forEachGI(this.walls, (x, y, wall) => {
+      drawTile(wall, x * TileSize, y * TileSize)
     })
 
     if (Debug.on) {
-      this.walls.forEach(wallIndex => {
-        const [x, y, w, h] = getFromWallIndex(wallIndex)
-        drawDebug(x, y, w, h, '#ff0000')
+      forEachGI(this.walls, (x, y, wall) => {
+        if (wall !== 0) return
+        const [xx, yy, w, h] = getWall(x, y)
+        drawDebug(xx, yy, w, h, '#ff0000')
       })
     }
 
@@ -144,15 +149,15 @@ export class Scene {
   }
 
   checkCollisions () {
-    this.walls.forEach(wallIndex => {
-      const [x, y, w, h] = getFromWallIndex(wallIndex)
-
-      collideWall(this.guy, x, y, w, h)
+    forEachGI(this.walls, (x, y, wall) => {
+      if (wall !== 0) return
+      const [xx, yy, w, h] = getWall(x, y)
+      collideWall(this.guy, xx, yy, w, h)
     })
   }
 
-  addTile (index:number) {
-    this.walls.push(index)
+  addTile (x:number, y:number) {
+    setGridItem(this.walls, x, y, 0)
   }
 }
 

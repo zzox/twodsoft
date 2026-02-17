@@ -7,17 +7,14 @@ export const setContext = (ctx:CanvasRenderingContext2D) => context = ctx
 
 export const setImage = (img:HTMLImageElement) => image = img
 
-export const drawTile = (fromIndex:number, toIndex:number) => {
+export const drawTile = (fromIndex:number, x:number, y:number) => {
   const tRowWidth = (image.width / TileSize)
   const tRow = fromIndex % tRowWidth
   const tColumn = Math.floor(fromIndex / tRowWidth)
 
-  const row = toIndex % TileWidth
-  const column = Math.floor(toIndex / TileWidth)
-
   context.drawImage(image,
     tRow * TileSize, tColumn * TileSize, TileSize, TileSize,
-    row * TileSize, column * TileSize, TileSize, TileSize
+    x, y, TileSize, TileSize
   )
 }
 
