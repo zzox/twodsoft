@@ -1,13 +1,7 @@
 import { TileHeight, TileWidth } from '../core/const'
-import { drawSprite, drawTile } from '../core/draw'
+import { drawSprite, drawTile, drawDebug } from '../core/draw'
 import { keys } from '../core/keys'
-
-type Guy = {
-  vec:Vec3
-  facing:FacingDir
-}
-
-const newGuy = (vec:Vec3) => ({ vec, facing: FacingDir.Down })
+import { Debug } from '../util/debug'
 
 enum FacingDir {
   Left,
@@ -22,16 +16,33 @@ type Vec3 = {
   z:number
 }
 
+type Vec2 = {
+  x:number
+  y:number
+}
+
 const vec3 = (x:number, y:number, z:number):Vec3 => ({ x, y, z })
+const vec2 = (x:number, y:number):Vec2 => ({ x, y })
+
+type Actor = {
+  offset:Vec2
+  vec:Vec3
+  size:Vec3
+  facing:FacingDir
+}
+
+const newActor = (vec:Vec3, offset:Vec2) => ({ vec, facing: FacingDir.Down, size: vec3(8, 8, 8), offset })
 
 const vel = 60
 const diagVel = vel / Math.SQRT2
 
 export class Scene {
-  guy:Guy
+  guy:Actor
+  actors:Actor[] = []
 
   constructor () {
-    this.guy = newGuy(vec3(100, 80, 12))
+    this.guy = newActor(vec3(100, 80, 12), vec2(4, 4))
+    this.actors.push(this.guy)
   }
 
   create () {
@@ -77,7 +88,16 @@ export class Scene {
       drawTile(0, TileWidth * i)
       drawTile(0, TileWidth * i - 1)
     }
-    drawSprite(Math.floor(this.guy.vec.x), Math.floor(this.guy.vec.y), 12 + this.guy.facing)
+
+    this.actors.forEach(actor => {
+      drawSprite(Math.floor(actor.vec.x) - actor.offset.x, Math.floor(actor.vec.y) - actor.offset.y, 12 + actor.facing)
+    })
+
+    if (Debug.on) {
+      this.actors.forEach(actor => {
+        drawDebug(Math.floor(actor.vec.x), Math.floor(actor.vec.y), actor.size.x, actor.size.y)
+      })
+    }
   }
 }
 

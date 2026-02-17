@@ -32,6 +32,13 @@ export const drawSprite = (x:number, y:number, index:number, width = 16, height 
   )
 }
 
+export const drawDebug = (x:number, y:number, width:number, height:number) => {
+  context.fillStyle = '#ff00ff'
+  context.globalAlpha = 0.5
+  context.fillRect(x, y, width, height)
+  context.globalAlpha = 1.0
+}
+
 export const clear = (bgColor:string = 'black') => {
   // context.clearRect
   context.fillStyle = bgColor

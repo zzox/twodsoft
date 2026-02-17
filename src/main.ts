@@ -115,11 +115,21 @@ const run = async () => {
   // );
 
   document.onkeydown = (event:KeyboardEvent) => {
-    event.preventDefault()
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight':
+        event.preventDefault()
+        break
+      case 'd':
+        Debug.on = !Debug.on
+        break
+    }
     keys.set(event.key, true)
   }
   document.onkeyup = (event:KeyboardEvent) => {
-    event.preventDefault()
+    // event.preventDefault()
     keys.set(event.key, false)
   }
 
