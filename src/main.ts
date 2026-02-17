@@ -5,17 +5,13 @@ import { average } from './util/utils'
 import { clear, setContext, setImage } from './core/draw'
 
 const canvas = document.getElementById('main-canvas') as HTMLCanvasElement
+const fixed = document.getElementsByClassName('fixed')[0] as HTMLDivElement
 let scene:Scene
 
 const update = () => {
   const updateStart = performance.now()
 
   scene.update()
-
-  if (Math.random() < 0.001) {
-    console.log(`FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`)
-    console.log(`UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`)
-  }
 
   const time = performance.now()
   const updateTime = time - updateStart
@@ -52,6 +48,15 @@ const draw = () => {
     } else {
       break
     }
+  }
+
+  if (Debug.on) {
+    const pItems = Array.from(fixed.querySelectorAll('p'))
+    pItems[0].textContent = `FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`
+    pItems[1].textContent = `UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`
+    fixed.classList.remove('none')
+  } else {
+    fixed.classList.add('none')
   }
 }
 
@@ -96,6 +101,9 @@ const resizeCanvas = () => {
 
   canvas.style.width = `${multi * w}px`
   canvas.style.height = `${multi * h}px`
+
+  fixed.style.left = `${(availW - (multi * w)) / 2}px`
+  fixed.style.top = `${(availH - (multi * h)) / 2}px`
 }
 
 const run = async () => {
