@@ -6,7 +6,7 @@ import { forEachGI, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { FacingDir, vec2, vec3 } from '../types'
-import { Actor, newActor, newThing, Thing } from '../data/actor-data'
+import { Actor, newActor, newThing, Thing, ThingType } from '../data/actor-data'
 
 const vel = 60
 const diagVel = vel / Math.SQRT2
@@ -22,7 +22,6 @@ const getWall = (x:number, y:number):[number, number, number, number] => {
 
 export class Scene {
   guy:Actor
-  actors:Actor[] = []
   things:Thing[] = []
   // walls:number[] = []
 
@@ -33,9 +32,9 @@ export class Scene {
 
   constructor () {
     this.guy = newActor(vec3(100, 80, 12), vec2(4, 8))
-    this.actors.push(this.guy)
-
     const ball = newThing(vec3(100, 80, 4), vec2(6, 6))
+
+    this.things.push(this.guy)
     this.things.push(ball)
 
     this.walls = makeGrid(TileWidth, TileHeight, 1)
@@ -83,10 +82,6 @@ export class Scene {
     this.guy.vel.x = xvel * speed
     this.guy.vel.y = yvel * speed
 
-    this.actors.forEach(actor => {
-      updatePhysics(actor)
-    })
-
     this.things.forEach(thing => {
       updatePhysics(thing)
     })
@@ -107,17 +102,22 @@ export class Scene {
       })
     }
 
-    this.actors.forEach(actor => {
-      drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y) - actor.offset.y, 64 + actor.facing)
-    })
+    const things = this.things.filter(t => true)
+      .sort((a, b) => a.pos.y - b.pos.y)
 
-    this.things.forEach(thing => {
-      drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 192)
+    things.forEach(thing => {
+      if (thing.type === ThingType.Ball) {
+        drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 192)
+      } else {
+        // PERF:
+        const actor = thing as Actor
+        drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y) - actor.offset.y, 64 + actor.facing)
+      }
     })
 
     if (Debug.on) {
-      this.actors.forEach(actor => {
-        drawDebug(Math.floor(actor.pos.x), Math.floor(actor.pos.y), actor.size.x, actor.size.y)
+      this.things.forEach(thing => {
+        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y), thing.size.x, thing.size.y)
       })
     }
   }

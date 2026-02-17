@@ -112,7 +112,7 @@ const run = async () => {
   //     (image) =>
   //       new Promise((resolve) => image.addEventListener('load', resolve)),
   //   ),
-  // );
+  // )
 
   document.onkeydown = (event:KeyboardEvent) => {
     switch (event.key) {
