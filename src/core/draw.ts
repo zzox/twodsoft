@@ -4,6 +4,7 @@ let context:CanvasRenderingContext2D
 let image:HTMLImageElement
 
 export const setContext = (ctx:CanvasRenderingContext2D) => context = ctx
+export const getContext = ():CanvasRenderingContext2D => context
 
 export const setImage = (img:HTMLImageElement) => image = img
 

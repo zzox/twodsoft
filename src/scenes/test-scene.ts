@@ -1,12 +1,12 @@
 import { TileHeight, TileSize, TileWidth } from '../core/const'
-import { drawSprite, drawTile, drawDebug } from '../core/draw'
+import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { FacingDir, vec2, vec3 } from '../types'
-import { Actor, newActor, newThing, Thing, ThingType } from '../data/actor-data'
+import { Actor, bottomY, centerX, centerY, newActor, newThing, Thing, ThingType } from '../data/actor-data'
 
 const vel = 60
 const diagVel = vel / Math.SQRT2
@@ -31,11 +31,14 @@ export class Scene {
   // colliding = false
 
   constructor () {
-    this.guy = newActor(vec3(100, 80, 12), vec2(4, 8))
-    const ball = newThing(vec3(100, 80, 4), vec2(6, 6))
+    this.guy = newActor(vec3(100, 80, 0), vec2(4, 8))
 
     this.things.push(this.guy)
-    this.things.push(ball)
+    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
+    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
+    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
+    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
+    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
 
     this.walls = makeGrid(TileWidth, TileHeight, 1)
     for (let i = 0; i < TileWidth; i++) {
@@ -103,21 +106,34 @@ export class Scene {
     }
 
     const things = this.things.filter(t => true)
-      .sort((a, b) => a.pos.y - b.pos.y)
+      .sort((a, b) => (a.pos.y + a.size.y/* - a.pos.z*/) - (b.pos.y + b.size.y/* - b.pos.z*/))
+
+    // draw shadows
+    getContext().globalAlpha = 0.7
+    things.forEach(thing => {
+      if (thing.type === ThingType.Ball) {
+        const shadowSize = 3
+        drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 239 + shadowSize)
+      } else {
+        const shadowSize = 12
+        drawSprite(Math.floor(centerX(thing) - 8), Math.floor(bottomY(thing) - 8), 239 + shadowSize)
+      }
+    })
+    getContext().globalAlpha = 1.0
 
     things.forEach(thing => {
       if (thing.type === ThingType.Ball) {
-        drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 192)
+        drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y - thing.pos.z) - thing.offset.y, 192)
       } else {
         // PERF:
         const actor = thing as Actor
-        drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y) - actor.offset.y, 64 + actor.facing)
+        drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y - actor.pos.z) - actor.offset.y, 64 + actor.facing)
       }
     })
 
     if (Debug.on) {
       this.things.forEach(thing => {
-        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y), thing.size.x, thing.size.y)
+        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y - thing.pos.z), thing.size.x, thing.size.y)
       })
     }
   }

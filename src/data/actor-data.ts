@@ -1,4 +1,5 @@
 import { clone3, FacingDir, Vec2, vec3, Vec3 } from '../types'
+import { randomInt } from '../util/random'
 
 export enum ThingType {
   Ball,
@@ -28,4 +29,8 @@ export type Actor = Thing & {
 
 export const newActor = (pos:Vec3, offset:Vec2):Actor => ({ type: ThingType.Guy, pos, facing: FacingDir.Down, size: vec3(8, 8, 8), last: clone3(pos), offset, vel: vec3(0, 0, 0), bounce: 0 })
 
-export const newThing = (pos:Vec3, offset:Vec2):Thing => ({ type: ThingType.Ball, pos, size: vec3(3, 3, 3), last: clone3(pos), offset, vel: vec3(0, 30, 0), bounce: 1 })
+export const newThing = (pos:Vec3, offset:Vec2):Thing => ({ type: ThingType.Ball, pos, size: vec3(3, 3, 3), last: clone3(pos), offset, vel: vec3(randomInt(3) * 30, randomInt(3) * 30, 0), bounce: 1 })
+
+export const centerX = (thing:Thing):number => thing.pos.x + thing.size.x / 2
+export const centerY = (thing:Thing):number => thing.pos.y + thing.size.y / 2
+export const bottomY = (thing:Thing):number => thing.pos.y + thing.size.y
