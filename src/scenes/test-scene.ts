@@ -67,7 +67,7 @@ export class Scene {
   // colliding = false
 
   constructor () {
-    this.guy = newActor(vec3(100, 80, 12), vec2(4, 4))
+    this.guy = newActor(vec3(100, 80, 12), vec2(4, 8))
     this.actors.push(this.guy)
 
     for (let i = 0; i < TileWidth; i++) {
@@ -133,7 +133,7 @@ export class Scene {
     }
 
     this.actors.forEach(actor => {
-      drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y) - actor.offset.y, 12 + actor.facing)
+      drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y) - actor.offset.y, 64 + actor.facing)
     })
 
     if (Debug.on) {
