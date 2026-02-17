@@ -5,46 +5,8 @@ import { Debug } from '../util/debug'
 import { forEachGI, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
-
-enum FacingDir {
-  Left,
-  Right,
-  Up,
-  Down
-}
-
-type Vec3 = {
-  x:number
-  y:number
-  z:number
-}
-
-type Vec2 = {
-  x:number
-  y:number
-}
-
-export const vec3 = (x:number, y:number, z:number):Vec3 => ({ x, y, z })
-const vec2 = (x:number, y:number):Vec2 => ({ x, y })
-
-const clone3 = (vec:Vec3) => vec3(vec.x, vec.y, vec.z)
-
-// TODO: move to actors data
-export type Actor = {
-  offset:Vec2
-  pos:Vec3
-  last:Vec3
-  vel:Vec3
-  size:Vec3
-  facing:FacingDir
-}
-
-// type Wall = {
-//   // size:Vec3 <- all are asummed 16x16
-//   pos:Vec3
-// }
-
-const newActor = (pos:Vec3, offset:Vec2) => ({ pos, facing: FacingDir.Down, size: vec3(8, 8, 8), last: clone3(pos), offset, vel: vec3(0, 0, 0) })
+import { FacingDir, vec2, vec3 } from '../types'
+import { Actor, newActor, newThing, Thing } from '../data/actor-data'
 
 const vel = 60
 const diagVel = vel / Math.SQRT2
@@ -61,6 +23,7 @@ const getWall = (x:number, y:number):[number, number, number, number] => {
 export class Scene {
   guy:Actor
   actors:Actor[] = []
+  things:Thing[] = []
   // walls:number[] = []
 
   walls:Grid<number>
@@ -71,6 +34,9 @@ export class Scene {
   constructor () {
     this.guy = newActor(vec3(100, 80, 12), vec2(4, 8))
     this.actors.push(this.guy)
+
+    const ball = newThing(vec3(100, 80, 4), vec2(6, 6))
+    this.things.push(ball)
 
     this.walls = makeGrid(TileWidth, TileHeight, 1)
     for (let i = 0; i < TileWidth; i++) {
@@ -114,11 +80,15 @@ export class Scene {
     }
 
     const speed = xvel !== 0 && yvel !== 0 ? diagVel : vel
-    this.guy.vel.x = xvel * speed / 60
-    this.guy.vel.y = yvel * speed / 60
+    this.guy.vel.x = xvel * speed
+    this.guy.vel.y = yvel * speed
 
     this.actors.forEach(actor => {
       updatePhysics(actor)
+    })
+
+    this.things.forEach(thing => {
+      updatePhysics(thing)
     })
 
     this.checkCollisions()
@@ -141,6 +111,10 @@ export class Scene {
       drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y) - actor.offset.y, 64 + actor.facing)
     })
 
+    this.things.forEach(thing => {
+      drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 192)
+    })
+
     if (Debug.on) {
       this.actors.forEach(actor => {
         drawDebug(Math.floor(actor.pos.x), Math.floor(actor.pos.y), actor.size.x, actor.size.y)
@@ -149,10 +123,12 @@ export class Scene {
   }
 
   checkCollisions () {
-    forEachGI(this.walls, (x, y, wall) => {
-      if (wall !== 0) return
-      const [xx, yy, w, h] = getWall(x, y)
-      collideWall(this.guy, xx, yy, w, h)
+    this.things.forEach(thing => {
+      forEachGI(this.walls, (x, y, wall) => {
+        if (wall !== 0) return
+        const [xx, yy, w, h] = getWall(x, y)
+        collideWall(thing, xx, yy, w, h)
+      })
     })
   }
 

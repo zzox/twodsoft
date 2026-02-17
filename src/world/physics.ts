@@ -1,10 +1,14 @@
-import { Actor, vec3 } from '../scenes/test-scene'
+import { Thing } from '../data/actor-data'
+import { vec3 } from '../types'
 
-export const updatePhysics = (actor:Actor) => {
-  actor.last.x = actor.pos.x
-  actor.last.y = actor.pos.y
-  actor.pos.x += actor.vel.x
-  actor.pos.y += actor.vel.y
+// TODO: get from const
+const fps = 60
+
+export const updatePhysics = (thing:Thing) => {
+  thing.last.x = thing.pos.x
+  thing.last.y = thing.pos.y
+  thing.pos.x += thing.vel.x / 60
+  thing.pos.y += thing.vel.y / 60
 }
 
 // Returns true if two physics bodies overlap.
@@ -12,33 +16,33 @@ export const overlaps = (x1:number, y1:number, w1:number, h1:number, x2:number, 
   x1 + w1 > x2 && x1 < x2 + w2 && y1 + h1 > y2 && y1 < y2 + h2
   // x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2 <- seam clips
 
-export const collideWall = (actor:Actor, wx:number, wy:number, ww:number, wh:number) => {
+export const collideWall = (actor:Thing, wx:number, wy:number, ww:number, wh:number) => {
   if (overlaps(actor.pos.x, actor.pos.y, actor.size.x, actor.size.y, wx, wy, ww, wh)) {   
-    console.log('collide', checkDirectionalCollision(actor, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16)} as Actor, true))
+    console.log('collide', checkDirectionalCollision(actor, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16)} as Thing, true))
   }
 }
 
-const checkDirectionalCollision = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean => {
+const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
   var collided = false
-  const upCollide = checkUp(fromActor, intoActor, separates)
+  const upCollide = checkUp(fromThing, intoThing, separates)
   if (upCollide) {
     collided = true
     // return true
   }
 
-  const downCollide = checkDown(fromActor, intoActor, separates)
+  const downCollide = checkDown(fromThing, intoThing, separates)
   if (downCollide) {
     collided = true
     // return true
   }
 
-  const leftCollide = checkLeft(fromActor, intoActor, separates)
+  const leftCollide = checkLeft(fromThing, intoThing, separates)
   if (leftCollide) {
     collided = true
     // return true
   }
 
-  const rightCollide = checkRight(fromActor, intoActor, separates)
+  const rightCollide = checkRight(fromThing, intoThing, separates)
   if (rightCollide) {
     collided = true
     // return true
@@ -47,13 +51,13 @@ const checkDirectionalCollision = (fromActor:Actor, intoActor:Actor, separates:b
   return collided
 }
 
-const checkUp = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean => {
-  if (/* fromActor.collides.up && intoActor.collides.down
-    && */ fromActor.last.y >= intoActor.pos.y + intoActor.size.y
-    && fromActor.pos.y < intoActor.pos.y + intoActor.size.y) {
-    // fromActor.touching.up = true
+const checkUp = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
+  if (/* fromThing.collides.up && intoThing.collides.down
+    && */ fromThing.last.y >= intoThing.pos.y + intoThing.size.y
+    && fromThing.pos.y < intoThing.pos.y + intoThing.size.y) {
+    // fromThing.touching.up = true
     if (separates) {
-      separateUp(fromActor, intoActor)
+      separateUp(fromThing, intoThing)
     }
     return true
   }
@@ -61,13 +65,13 @@ const checkUp = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean =>
   return false
 }
 
-const checkDown = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean => {
-  if (/* fromActor.collides.down && intoActor.collides.up
-    && */ fromActor.last.y + fromActor.size.y <= intoActor.pos.y
-    && fromActor.pos.y + fromActor.size.y > intoActor.pos.y) {
-    // fromActor.touching.down = true
+const checkDown = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
+  if (/* fromThing.collides.down && intoThing.collides.up
+    && */ fromThing.last.y + fromThing.size.y <= intoThing.pos.y
+    && fromThing.pos.y + fromThing.size.y > intoThing.pos.y) {
+    // fromThing.touching.down = true
     if (separates) {
-      separateDown(fromActor, intoActor)
+      separateDown(fromThing, intoThing)
     }
     return true
   }
@@ -75,13 +79,13 @@ const checkDown = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean 
   return false
 }
 
-const checkLeft = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean => {
-  if (/* fromActor.collides.left && intoActor.collides.right
-    && */ fromActor.last.x >= intoActor.pos.x + intoActor.size.x
-    && fromActor.pos.x < intoActor.pos.x + intoActor.size.x) {
-    // fromActor.touching.left = true
+const checkLeft = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
+  if (/* fromThing.collides.left && intoThing.collides.right
+    && */ fromThing.last.x >= intoThing.pos.x + intoThing.size.x
+    && fromThing.pos.x < intoThing.pos.x + intoThing.size.x) {
+    // fromThing.touching.left = true
     if (separates) {
-      separateLeft(fromActor, intoActor)
+      separateLeft(fromThing, intoThing)
     }
     return true
   }
@@ -89,13 +93,13 @@ const checkLeft = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean 
   return false
 }
 
-const checkRight = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean => {
-  if (/* fromActor.collides.right && intoActor.collides.left
-    && */ fromActor.last.x + fromActor.size.x <= intoActor.pos.x
-    && fromActor.pos.x + fromActor.size.x > intoActor.pos.x) {
-    // fromActor.touching.right = true
+const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
+  if (/* fromThing.collides.right && intoThing.collides.left
+    && */ fromThing.last.x + fromThing.size.x <= intoThing.pos.x
+    && fromThing.pos.x + fromThing.size.x > intoThing.pos.x) {
+    // fromThing.touching.right = true
     if (separates) {
-      separateRight(fromActor, intoActor)
+      separateRight(fromThing, intoThing)
     }
     return true
   }
@@ -103,23 +107,23 @@ const checkRight = (fromActor:Actor, intoActor:Actor, separates:boolean):boolean
   return false
 }
 
-// remove fromActor from intoActor
-const separateUp = (fromActor:Actor, intoActor:Actor) => {
-  fromActor.pos.y = intoActor.pos.y + intoActor.size.y
-  fromActor.vel.y = -fromActor.vel.y * 0 // fromActor.bounce
+// remove fromThing from intoThing
+const separateUp = (fromThing:Thing, intoThing:Thing) => {
+  fromThing.pos.y = intoThing.pos.y + intoThing.size.y
+  fromThing.vel.y = -fromThing.vel.y * fromThing.bounce
 }
 
-const separateDown = (fromActor:Actor, intoActor:Actor) => {
-  fromActor.pos.y = intoActor.pos.y - fromActor.size.y
-  fromActor.vel.y = -fromActor.vel.y * 0 // fromActor.bounce
+const separateDown = (fromThing:Thing, intoThing:Thing) => {
+  fromThing.pos.y = intoThing.pos.y - fromThing.size.y
+  fromThing.vel.y = -fromThing.vel.y * fromThing.bounce
 }
 
-const separateLeft = (fromActor:Actor, intoActor:Actor) => {
-  fromActor.pos.x = intoActor.pos.x + intoActor.size.x
-  fromActor.vel.x = -fromActor.vel.x * 0 // fromActor.bounce
+const separateLeft = (fromThing:Thing, intoThing:Thing) => {
+  fromThing.pos.x = intoThing.pos.x + intoThing.size.x
+  fromThing.vel.x = -fromThing.vel.x * fromThing.bounce
 }
 
-const separateRight = (fromActor:Actor, intoActor:Actor) => {
-  fromActor.pos.x = intoActor.pos.x - fromActor.size.x
-  fromActor.vel.x = -fromActor.vel.x * 0 // fromActor.bounce
+const separateRight = (fromThing:Thing, intoThing:Thing) => {
+  fromThing.pos.x = intoThing.pos.x - fromThing.size.x
+  fromThing.vel.x = -fromThing.vel.x * fromThing.bounce
 }
