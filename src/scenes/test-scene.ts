@@ -6,7 +6,8 @@ import { forEachGI, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { FacingDir, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, centerY, newActor, newThing, Thing, ThingType } from '../data/actor-data'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType } from '../data/actor-data'
+import { getAnim } from '../data/anim-data'
 
 const vel = 60
 const diagVel = vel / Math.SQRT2
@@ -86,6 +87,7 @@ export class Scene {
     this.guy.vel.y = yvel * speed
 
     this.things.forEach(thing => {
+      thing.stateTime++
       updatePhysics(thing)
     })
 
@@ -115,7 +117,7 @@ export class Scene {
         const shadowSize = 3
         drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 239 + shadowSize)
       } else {
-        const shadowSize = 12
+        const shadowSize = 10
         drawSprite(Math.floor(centerX(thing) - 8), Math.floor(bottomY(thing) - 8), 239 + shadowSize)
       }
     })
@@ -123,7 +125,7 @@ export class Scene {
 
     things.forEach(thing => {
       if (thing.type === ThingType.Ball) {
-        drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y - thing.pos.z) - thing.offset.y, 192)
+        drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y - thing.pos.z) - thing.offset.y, getAnim(thing))
       } else {
         // PERF:
         const actor = thing as Actor
