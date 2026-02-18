@@ -9,19 +9,25 @@ export enum ThingType {
 
 export enum ThingState {
   None,
-  Moving
+  Moving,
+  PreThrow,
+  Throw
 }
 
-// thing is a physical object that can move.
-export type Thing = {
-  type:ThingType
-  state:ThingState
-  stateTime:number
-  offset:Vec2
+type PhysicsObject = {
   pos:Vec3
   last:Vec3
   vel:Vec3
   size:Vec3
+  gravityFactor:number
+}
+
+// thing is a physical object that can move.
+export type Thing = PhysicsObject & {
+  type:ThingType
+  state:ThingState
+  stateTime:number
+  offset:Vec2
   bounce:number
 }
 
@@ -43,6 +49,7 @@ export const newActor = (pos:Vec3, offset:Vec2):Actor => ({
   size: vec3(8, 8, 8),
   last: clone3(pos),
   vel: vec3(0, 0, 0),
+  gravityFactor: 1,
   bounce: 0,
   state: ThingState.None,
   stateTime: 0
@@ -55,6 +62,7 @@ export const newThing = (pos:Vec3, offset:Vec2):Thing => ({
   last: clone3(pos),
   offset,
   vel: vec3(randomInt(3) * 30, randomInt(3) * 30, 0),
+  gravityFactor: 0,
   bounce: 1,
   state: ThingState.Moving,
   stateTime: 0

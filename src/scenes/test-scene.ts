@@ -82,6 +82,10 @@ export class Scene {
       this.guy.facing = FacingDir.Right
     }
 
+    if (keys.get('x')) {
+      this.charThrow()
+    }
+
     const speed = xvel !== 0 && yvel !== 0 ? diagVel : vel
     this.guy.vel.x = xvel * speed
     this.guy.vel.y = yvel * speed
@@ -165,6 +169,10 @@ export class Scene {
 
   addTile (x:number, y:number) {
     setGridItem(this.walls, x, y, 0)
+  }
+
+  charThrow () {
+    console.log(this.guy, this.guy.facing)
   }
 }
 

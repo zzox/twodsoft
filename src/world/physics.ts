@@ -7,7 +7,7 @@ const fps = 60
 export const updatePhysics = (thing:Thing) => {
   thing.last.x = thing.pos.x
   thing.last.y = thing.pos.y
-  thing.vel.z -= 60 / fps
+  thing.vel.z -= (60 / fps) * thing.gravityFactor
   thing.pos.x += thing.vel.x / fps
   thing.pos.y += thing.vel.y / fps
   thing.pos.z += thing.vel.z / fps
