@@ -68,7 +68,7 @@ let frameTime = 1000 / fps
 
 const next = (time:number) => {
   const delta = time - prev
-  acc += delta
+  acc += Math.min(delta, frameTime + 2.0)
 
   if (acc > frameTime) {
     update()
