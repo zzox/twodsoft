@@ -1,9 +1,9 @@
-import { clone3, FacingDir, Vec2, vec3, Vec3 } from '../types'
+import { clone3, FacingDir, vec2, Vec2, vec3, Vec3 } from '../types'
 import { randomInt } from '../util/random'
 
 // tile index of the thing
 export enum ThingType {
-  Ball = 192,
+  Rock = 192,
   Guy = 64
 }
 
@@ -24,6 +24,8 @@ type PhysicsObject = {
 
 // thing is a physical object that can move.
 export type Thing = PhysicsObject & {
+  dead:boolean
+  health:number
   type:ThingType
   state:ThingState
   stateTime:number
@@ -52,22 +54,46 @@ export const newActor = (pos:Vec3, offset:Vec2):Actor => ({
   gravityFactor: 1,
   bounce: 0,
   state: ThingState.None,
-  stateTime: 0
+  stateTime: 0,
+  health: 10,
+  dead: false
 })
 
-export const newThing = (pos:Vec3, offset:Vec2):Thing => ({
-  type: ThingType.Ball,
+export const newThing = (pos:Vec3, vel:Vec3):Thing => ({
+  type: ThingType.Rock,
   pos,
   size: vec3(3, 3, 3),
   last: clone3(pos),
-  offset,
-  vel: vec3(randomInt(3) * 30, randomInt(3) * 30, 0),
-  gravityFactor: 0,
+  offset: vec2(6, 6),
+  vel,
+  gravityFactor: 1,
   bounce: 1,
   state: ThingState.Moving,
-  stateTime: 0
+  stateTime: 0,
+  health: 2,
+  dead: false
 })
 
 export const centerX = (thing:Thing):number => thing.pos.x + thing.size.x / 2
 export const centerY = (thing:Thing):number => thing.pos.y + thing.size.y / 2
 export const bottomY = (thing:Thing):number => thing.pos.y + thing.size.y
+
+export const throwPos = (actor:Actor):Vec3 => {
+  switch (actor.facing) {
+    case FacingDir.Left: return vec3(centerX(actor) - 6, centerY(actor) - 6, 6)
+    case FacingDir.Right: return vec3(centerX(actor) + 6, centerY(actor) + 6, 6)
+    case FacingDir.Up: return vec3(centerX(actor) + 6, centerY(actor) - 6, 6)
+    case FacingDir.Down: return vec3(centerX(actor) - 6, centerY(actor) + 6, 6)
+    default: throw new Error('Bad facing dir')
+  }
+}
+
+export const throwVel = (actor:Actor):Vec3 => {
+  switch (actor.facing) {
+    case FacingDir.Left: return vec3(-120, 0, 1)
+    case FacingDir.Right: return vec3(120, 0, 1)
+    case FacingDir.Up: return vec3(0, -120, 1)
+    case FacingDir.Down: return vec3(0, 120, 1)
+    default: throw new Error('Bad facing dir')
+  }
+}

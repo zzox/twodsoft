@@ -1,4 +1,4 @@
-import { keys } from './core/keys'
+import { keys, justPressed, clearJustPressed } from './core/keys'
 import { Scene } from './scenes/test-scene'
 import { Debug } from './util/debug'
 import { average } from './util/utils'
@@ -12,6 +12,7 @@ const update = () => {
   const updateStart = performance.now()
 
   scene.update()
+  clearJustPressed()
 
   const time = performance.now()
   const updateTime = time - updateStart
@@ -97,7 +98,7 @@ const resizeCanvas = () => {
   const maxW = Math.floor(availW / (w - padding))
   const maxH = Math.floor(availH / (h - padding))
   // lower than maxMultiplier, but at least two
-  const multi = Math.max(Math.min(Math.min(maxW, maxH), maxMulti), 2)
+  const multi = Math.max(Math.min(Math.min(maxW, maxH), maxMulti), 1)
 
   canvas.style.width = `${multi * w}px`
   canvas.style.height = `${multi * h}px`
@@ -140,7 +141,9 @@ const run = async () => {
         )
         break
     }
+    if (event.repeat) return
     keys.set(event.key, true)
+    justPressed.set(event.key, true)
   }
   document.onkeyup = (event:KeyboardEvent) => {
     // event.preventDefault()

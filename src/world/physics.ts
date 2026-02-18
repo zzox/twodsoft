@@ -18,10 +18,12 @@ export const overlaps = (x1:number, y1:number, w1:number, h1:number, x2:number, 
   x1 + w1 > x2 && x1 < x2 + w2 && y1 + h1 > y2 && y1 < y2 + h2
   // x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2 <- seam clips
 
-export const collideWall = (actor:Thing, wx:number, wy:number, ww:number, wh:number) => {
+// Returns true if there's a collision
+export const collideWall = (actor:Thing, wx:number, wy:number, ww:number, wh:number):boolean => {
   if (overlaps(actor.pos.x, actor.pos.y, actor.size.x, actor.size.y, wx, wy, ww, wh)) {   
-    console.log('collide', checkDirectionalCollision(actor, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16)} as Thing, true))
+    return checkDirectionalCollision(actor, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16)} as Thing, true)
   }
+  return false
 }
 
 const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {

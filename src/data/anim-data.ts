@@ -10,7 +10,7 @@ const anims = new Map<ThingType, Map<ThingState, Anim>>()
 
 const ballAnims = new Map()
 ballAnims.set(ThingState.Moving, { repeats: true, frames: [0, 1], speed: 5 })
-anims.set(ThingType.Ball, ballAnims)
+anims.set(ThingType.Rock, ballAnims)
 
 export const getAnim = (thing:Thing):number => {
   const anim = anims.get(thing.type)!.get(thing.state)!

@@ -1,12 +1,12 @@
 import { TileHeight, TileSize, TileWidth } from '../core/const'
 import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
-import { keys } from '../core/keys'
+import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { FacingDir, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType } from '../data/actor-data'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwPos, throwVel } from '../data/actor-data'
 import { getAnim } from '../data/anim-data'
 
 const vel = 60
@@ -24,7 +24,6 @@ const getWall = (x:number, y:number):[number, number, number, number] => {
 export class Scene {
   guy:Actor
   things:Thing[] = []
-  // walls:number[] = []
 
   walls:Grid<number>
 
@@ -35,11 +34,6 @@ export class Scene {
     this.guy = newActor(vec3(100, 80, 0), vec2(4, 8))
 
     this.things.push(this.guy)
-    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
-    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
-    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
-    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
-    this.things.push(newThing(vec3(100, 80, 8), vec2(6, 6)))
 
     this.walls = makeGrid(TileWidth, TileHeight, 1)
     for (let i = 0; i < TileWidth; i++) {
@@ -82,7 +76,7 @@ export class Scene {
       this.guy.facing = FacingDir.Right
     }
 
-    if (keys.get('x')) {
+    if (justPressed.get('x')) {
       this.charThrow()
     }
 
@@ -96,6 +90,8 @@ export class Scene {
     })
 
     this.checkCollisions()
+
+    this.things = this.things.filter(t => !t.dead)
   }
 
   draw () {
@@ -117,7 +113,7 @@ export class Scene {
     // draw shadows
     getContext().globalAlpha = 0.7
     things.forEach(thing => {
-      if (thing.type === ThingType.Ball) {
+      if (thing.type === ThingType.Rock) {
         const shadowSize = 3
         drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 239 + shadowSize)
       } else {
@@ -128,7 +124,7 @@ export class Scene {
     getContext().globalAlpha = 1.0
 
     things.forEach(thing => {
-      if (thing.type === ThingType.Ball) {
+      if (thing.type === ThingType.Rock) {
         drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y - thing.pos.z) - thing.offset.y, getAnim(thing))
       } else {
         // PERF:
@@ -159,12 +155,35 @@ export class Scene {
 
     // wall collisions
     this.things.forEach(thing => {
+      let collided = false
       forEachGI(this.walls, (x, y, wall) => {
         if (wall !== 0) return
         const [xx, yy, w, h] = getWall(x, y)
-        collideWall(thing, xx, yy, w, h)
+        if (collideWall(thing, xx, yy, w, h)) {
+          collided = true
+        }
       })
+
+      if (collided) {
+        this.handleCollision(thing, true)
+      }
     })
+  }
+
+  // TODO: move out of scene?
+  handleCollision (thing:Thing, withWall:boolean) {
+    switch (thing.type) {
+      case ThingType.Rock:
+        thing.health -= 1
+        break
+      default:
+        console.log('other')
+        break
+    }
+
+    if (thing.health <= 0) {
+      thing.dead = true
+    }
   }
 
   addTile (x:number, y:number) {
@@ -172,7 +191,14 @@ export class Scene {
   }
 
   charThrow () {
-    console.log(this.guy, this.guy.facing)
+    const pos = throwPos(this.guy)
+    const vel = throwVel(this.guy)
+
+    const thing = newThing(pos, vel)
+    this.things.push(thing)
+
+    pos.x -= thing.size.x / 2
+    pos.y -= thing.size.y / 2
   }
 }
 
