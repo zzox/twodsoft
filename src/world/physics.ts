@@ -7,8 +7,10 @@ const fps = 60
 export const updatePhysics = (thing:Thing) => {
   thing.last.x = thing.pos.x
   thing.last.y = thing.pos.y
-  thing.pos.x += thing.vel.x / 60
-  thing.pos.y += thing.vel.y / 60
+  thing.vel.z -= 60 / fps
+  thing.pos.x += thing.vel.x / fps
+  thing.pos.y += thing.vel.y / fps
+  thing.pos.z += thing.vel.z / fps
 }
 
 // Returns true if two physics bodies overlap.

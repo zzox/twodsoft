@@ -141,6 +141,19 @@ export class Scene {
   }
 
   checkCollisions () {
+    // ground collisions
+    this.things.forEach(thing => {
+      if (thing.pos.z < 0) {
+        if (thing.last.z === 0) {
+          thing.pos.z = 0
+        } else {
+          thing.pos.z = -thing.pos.z
+          thing.vel.z = -thing.vel.z
+        }
+      }
+    })
+
+    // wall collisions
     this.things.forEach(thing => {
       forEachGI(this.walls, (x, y, wall) => {
         if (wall !== 0) return
