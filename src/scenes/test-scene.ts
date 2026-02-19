@@ -156,7 +156,10 @@ export class Scene {
 
     if (Debug.on) {
       this.things.forEach(thing => {
-        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y - thing.pos.z), thing.size.x, thing.size.y)
+        // front
+        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y + thing.size.y - thing.size.z - thing.pos.z), thing.size.x, thing.size.z, '#0000ff')
+        // top
+        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y - thing.pos.z - thing.size.y), thing.size.x, thing.size.y)
       })
     }
   }
