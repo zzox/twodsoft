@@ -22,12 +22,20 @@ export const updatePhysics = (thing:Thing) => {
 // Returns true if two physics bodies overlap.
 export const overlaps = (x1:number, y1:number, w1:number, h1:number, x2:number, y2:number, w2:number, h2:number):boolean =>
   x1 + w1 > x2 && x1 < x2 + w2 && y1 + h1 > y2 && y1 < y2 + h2
+
+export const overlaps3 = (
+  x1:number, y1:number, z1:number,
+  w1:number, h1:number, t1:number,
+  x2:number, y2:number, z2:number,
+  w2:number, h2:number, t2:number
+):boolean =>
+  x1 + w1 > x2 && x1 < x2 + w2 && y1 + h1 > y2 && y1 < y2 + h2 && z1 + t1 > z2 && z1 < z2 + t2
   // x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2 <- seam clips
 
 // Returns true if there's a collision
-export const collideWall = (actor:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
-  if (overlaps(actor.pos.x, actor.pos.y, actor.size.x, actor.size.y, wx, wy, ww, wh)) {   
-    return checkDirectionalCollision(actor, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16) } as Thing, true, wallCollides)
+export const collideWall = (thing:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
+  if (overlaps3(thing.pos.x, thing.pos.y, thing.pos.z, thing.size.x, thing.size.y, thing.size.z, wx, wy, 0, ww, wh, 16)) {
+    return checkDirectionalCollision(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16) } as Thing, true, wallCollides)
   }
   return false
 }
