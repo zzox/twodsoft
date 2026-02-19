@@ -8,6 +8,8 @@ const canvas = document.getElementById('main-canvas') as HTMLCanvasElement
 const fixed = document.getElementsByClassName('fixed')[0] as HTMLDivElement
 let scene:Scene
 
+let paused:boolean = false
+
 const update = () => {
   const updateStart = performance.now()
 
@@ -68,13 +70,15 @@ let fps = 60
 let frameTime = 1000 / fps
 
 const next = (time:number) => {
-  const delta = time - prev
-  acc += Math.min(delta, frameTime + 2.0)
+  if (!paused) {
+    const delta = time - prev
+    acc += Math.min(delta, frameTime + 2.0)
 
-  if (acc > frameTime) {
-    update()
-    draw()
-    acc -= frameTime
+    if (acc > frameTime) {
+      update()
+      draw()
+      acc -= frameTime
+    }
   }
 
   requestAnimationFrame(next)
@@ -129,6 +133,7 @@ const run = async () => {
       case 'ArrowDown':
       case 'ArrowLeft':
       case 'ArrowRight':
+      case 'Space':
         event.preventDefault()
         break
       case 'd':
@@ -139,6 +144,7 @@ const run = async () => {
           `FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us\n` +
           `UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`
         )
+        paused = !paused
         break
     }
     if (event.repeat) return
