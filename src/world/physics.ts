@@ -39,11 +39,58 @@ export const thingsOverlap = (t1:Thing, t2:Thing) =>
   )
 
 // Returns true if there's a collision
-export const collideWall = (thing:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
-  if (overlaps3(thing.pos.x, thing.pos.y, thing.pos.z, thing.size.x, thing.size.y, thing.size.z, wx, wy, 0, ww, wh, 16)) {
-    return checkDirectionalCollision(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16) } as Thing, true, wallCollides)
+export const collideWallProj = (thing:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
+  if (overlaps(thing.pos.x, thing.pos.y, thing.size.x, thing.size.y, wx, wy, ww, wh)) {
+    return checkWallDirectionalCollision(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 32) } as Thing, wallCollides)
   }
   return false
+}
+
+// Returns true if there's a collision
+export const collideWallXY = (thing:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
+  if (overlaps(thing.pos.x, thing.pos.y, thing.size.x, thing.size.y, wx, wy, ww, wh)) {
+    return checkDirectionalCollision(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 1) } as Thing, true, wallCollides)
+  }
+  return false
+}
+
+const checkWallDirectionalCollision = (fromThing:Thing, intoWall:Thing, intoCollides:Collides):boolean => {
+  const zHeight = fromThing.pos.z / 2
+
+  let collided = false
+  if (intoCollides.down
+    && fromThing.last.y >= intoWall.pos.y + intoWall.size.y - zHeight
+    && fromThing.pos.y < intoWall.pos.y + intoWall.size.y - zHeight) {
+    fromThing.pos.y = intoWall.pos.y + intoWall.size.y - zHeight
+    bounceY(fromThing)
+    collided = true
+  }
+
+  if (intoCollides.up
+    && fromThing.last.y + fromThing.size.y <= intoWall.pos.y + zHeight
+    && fromThing.pos.y + fromThing.size.y > intoWall.pos.y + zHeight) {
+    fromThing.pos.y = intoWall.pos.y + zHeight
+    bounceY(fromThing)
+    collided = true
+  }
+
+  if (intoCollides.right
+    && fromThing.last.x >= intoWall.pos.x + intoWall.size.x - zHeight
+    && fromThing.pos.x < intoWall.pos.x + intoWall.size.x - zHeight) {
+    fromThing.pos.x = intoWall.pos.x + intoWall.size.x - zHeight
+    bounceX(fromThing)
+    collided = true
+  }
+
+  if (intoCollides.left
+    && fromThing.last.x + fromThing.size.x <= intoWall.pos.x + zHeight
+    && fromThing.pos.x + fromThing.size.x > intoWall.pos.x + zHeight) {
+    fromThing.pos.x = intoWall.pos.x + zHeight
+    bounceX(fromThing)
+    collided = true
+  }
+
+  return collided
 }
 
 const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
@@ -82,6 +129,7 @@ const checkUp = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollid
     // fromThing.touching.up = true
     if (separates) {
       separateUp(fromThing, intoThing)
+      bounceY(fromThing)
     }
     return true
   }
@@ -96,6 +144,7 @@ const checkDown = (fromThing:Thing, intoThing:Thing, separates:boolean, intoColl
     // fromThing.touching.down = true
     if (separates) {
       separateDown(fromThing, intoThing)
+      bounceY(fromThing)
     }
     return true
   }
@@ -110,6 +159,7 @@ const checkLeft = (fromThing:Thing, intoThing:Thing, separates:boolean, intoColl
     // fromThing.touching.left = true
     if (separates) {
       separateLeft(fromThing, intoThing)
+      bounceX(fromThing)
     }
     return true
   }
@@ -124,6 +174,7 @@ const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCol
     // fromThing.touching.right = true
     if (separates) {
       separateRight(fromThing, intoThing)
+      bounceX(fromThing)
     }
     return true
   }
@@ -134,28 +185,28 @@ const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCol
 // remove fromThing from intoThing
 const separateUp = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y + intoThing.size.y
-  fromThing.vel = fromThing.vel * fromThing.bounce
-  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
-  fromThing.angle = -fromThing.angle
 }
 
 const separateDown = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y - fromThing.size.y
-  fromThing.vel = fromThing.vel * fromThing.bounce
-  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
-  fromThing.angle = -fromThing.angle
 }
 
 const separateLeft = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x + intoThing.size.x
-  fromThing.vel = fromThing.vel * fromThing.bounce
-  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
-  fromThing.angle = 180 - fromThing.angle
 }
 
 const separateRight = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x - fromThing.size.x
-  fromThing.vel = fromThing.vel * fromThing.bounce
-  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
-  fromThing.angle = 180 - fromThing.angle
+}
+
+const bounceX = (thing:Thing) => {
+  thing.vel = thing.vel * thing.bounce
+  if (Math.abs(thing.vel) < 3) thing.vel = 0
+  thing.angle = 180 - thing.angle
+}
+
+const bounceY = (thing:Thing) => {
+  thing.vel = thing.vel * thing.bounce
+  if (Math.abs(thing.vel) < 3) thing.vel = 0
+  thing.angle = -thing.angle
 }

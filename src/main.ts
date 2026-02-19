@@ -57,7 +57,7 @@ const draw = () => {
     const pItems = Array.from(fixed.querySelectorAll('p'))
     pItems[0].textContent = `FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`
     pItems[1].textContent = `UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`
-    pItems[2].textContent = `checks: ${scene.checks}`
+    pItems[2].textContent = `things: ${scene.things.length} checks: ${scene.checks}`
     fixed.classList.remove('none')
   } else {
     fixed.classList.add('none')

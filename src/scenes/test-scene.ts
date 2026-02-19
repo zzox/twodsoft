@@ -3,7 +3,7 @@ import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
-import { collideWall, thingsOverlap, updatePhysics } from '../world/physics'
+import { collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { Collides, collides, FacingDir, vec2, vec3 } from '../types'
 import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwAngle, throwPos } from '../data/actor-data'
@@ -99,6 +99,10 @@ export class Scene {
 
     if (justPressed.get('x')) {
       this.jumpBuffer = 0
+    }
+
+    if (justPressed.get('z')) {
+      this.things = this.things.filter(t => t === this.guy)
     }
 
     if (this.jumpBuffer <= JumpFrames) {
@@ -200,8 +204,14 @@ export class Scene {
       forEachGI(this.walls, (x, y, wall) => {
         if (wall !== 0) return
         const [xx, yy, w, h, collides] = getWall(this.walls, x, y)
-        if (collideWall(thing, xx, yy, w, h, collides)) {
-          collided = true
+        if (thing === this.guy) {
+          if (collideWallXY(thing, xx, yy, w, h, collides)) {
+            collided = true
+          }
+        } else {
+          if (collideWallProj(thing, xx, yy, w, h, collides)) {
+            collided = true
+          }
         }
       })
 
@@ -239,6 +249,7 @@ export class Scene {
   }
 
   // TODO: move out of scene?
+  // results of the collision that isn't physics-related
   handleCollision (thing:Thing, withWall:boolean) {
     switch (thing.type) {
       case ThingType.Rock:
@@ -249,7 +260,7 @@ export class Scene {
         break
     }
 
-    if (thing.health <= 0) {
+    if (thing.health === 0) {
       thing.dead = true
     }
   }
