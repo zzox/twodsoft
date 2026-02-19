@@ -98,6 +98,10 @@ export class Scene {
       this.charThrow()
     }
 
+    if (justPressed.get('c')) {
+      this.charJump()
+    }
+
     if (xvel !== 0 || yvel !== 0) {
       this.guy.vel = 60
       this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
@@ -226,6 +230,12 @@ export class Scene {
 
     pos.x -= thing.size.x / 2
     pos.y -= thing.size.y / 2
+  }
+
+  charJump () {
+    if (this.guy.pos.z === 0) {
+      this.guy.zVel = 60
+    }
   }
 }
 

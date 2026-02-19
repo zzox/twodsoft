@@ -1,5 +1,4 @@
 import { clone3, FacingDir, vec2, Vec2, vec3, Vec3 } from '../types'
-import { randomInt } from '../util/random'
 
 // tile index of the thing
 export enum ThingType {
@@ -70,7 +69,7 @@ export const newThing = (pos:Vec3, vel:number, angle:number):Thing => ({
   last: clone3(pos),
   offset: vec2(6, 6),
   vel,
-  zVel: 0,
+  zVel: 30,
   angle,
   gravityFactor: 1,
   bounce: 1,
@@ -86,10 +85,10 @@ export const bottomY = (thing:Thing):number => thing.pos.y + thing.size.y
 
 export const throwPos = (actor:Actor):Vec3 => {
   switch (actor.facing) {
-    case FacingDir.Left: return vec3(centerX(actor) - 6, centerY(actor) - 6, 6)
-    case FacingDir.Right: return vec3(centerX(actor) + 6, centerY(actor) + 6, 6)
-    case FacingDir.Up: return vec3(centerX(actor) + 6, centerY(actor) - 6, 6)
-    case FacingDir.Down: return vec3(centerX(actor) - 6, centerY(actor) + 6, 6)
+    case FacingDir.Left: return vec3(centerX(actor) - 6, centerY(actor) - 6, actor.pos.z + 6)
+    case FacingDir.Right: return vec3(centerX(actor) + 6, centerY(actor) + 6, actor.pos.z + 6)
+    case FacingDir.Up: return vec3(centerX(actor) + 6, centerY(actor) - 6, actor.pos.z + 6)
+    case FacingDir.Down: return vec3(centerX(actor) - 6, centerY(actor) + 6, actor.pos.z + 6)
     default: throw new Error('Bad facing dir')
   }
 }
