@@ -1,5 +1,5 @@
 import { Thing } from '../data/actor-data'
-import { vec3 } from '../types'
+import { Collides, vec3 } from '../types'
 import { toRadian } from '../util/utils'
 
 // TODO: get from const
@@ -24,34 +24,34 @@ export const overlaps = (x1:number, y1:number, w1:number, h1:number, x2:number, 
   // x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2 <- seam clips
 
 // Returns true if there's a collision
-export const collideWall = (actor:Thing, wx:number, wy:number, ww:number, wh:number):boolean => {
+export const collideWall = (actor:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
   if (overlaps(actor.pos.x, actor.pos.y, actor.size.x, actor.size.y, wx, wy, ww, wh)) {   
-    return checkDirectionalCollision(actor, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16)} as Thing, true)
+    return checkDirectionalCollision(actor, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 16) } as Thing, true, wallCollides)
   }
   return false
 }
 
-const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
+const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
   var collided = false
-  const upCollide = checkUp(fromThing, intoThing, separates)
+  const upCollide = checkUp(fromThing, intoThing, separates, intoCollides)
   if (upCollide) {
     collided = true
     // return true
   }
 
-  const downCollide = checkDown(fromThing, intoThing, separates)
+  const downCollide = checkDown(fromThing, intoThing, separates, intoCollides)
   if (downCollide) {
     collided = true
     // return true
   }
 
-  const leftCollide = checkLeft(fromThing, intoThing, separates)
+  const leftCollide = checkLeft(fromThing, intoThing, separates, intoCollides)
   if (leftCollide) {
     collided = true
     // return true
   }
 
-  const rightCollide = checkRight(fromThing, intoThing, separates)
+  const rightCollide = checkRight(fromThing, intoThing, separates, intoCollides)
   if (rightCollide) {
     collided = true
     // return true
@@ -60,9 +60,9 @@ const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:b
   return collided
 }
 
-const checkUp = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
-  if (/* fromThing.collides.up && intoThing.collides.down
-    && */ fromThing.last.y >= intoThing.pos.y + intoThing.size.y
+const checkUp = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
+  if (/* fromThing.collides.up && */ intoCollides.down
+    && fromThing.last.y >= intoThing.pos.y + intoThing.size.y
     && fromThing.pos.y < intoThing.pos.y + intoThing.size.y) {
     // fromThing.touching.up = true
     if (separates) {
@@ -74,9 +74,9 @@ const checkUp = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean =>
   return false
 }
 
-const checkDown = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
-  if (/* fromThing.collides.down && intoThing.collides.up
-    && */ fromThing.last.y + fromThing.size.y <= intoThing.pos.y
+const checkDown = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
+  if (/* fromThing.collides.down && */ intoCollides.up
+    && fromThing.last.y + fromThing.size.y <= intoThing.pos.y
     && fromThing.pos.y + fromThing.size.y > intoThing.pos.y) {
     // fromThing.touching.down = true
     if (separates) {
@@ -88,9 +88,9 @@ const checkDown = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean 
   return false
 }
 
-const checkLeft = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
-  if (/* fromThing.collides.left && intoThing.collides.right
-    && */ fromThing.last.x >= intoThing.pos.x + intoThing.size.x
+const checkLeft = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
+  if (/* fromThing.collides.left && */ intoCollides.right
+    && fromThing.last.x >= intoThing.pos.x + intoThing.size.x
     && fromThing.pos.x < intoThing.pos.x + intoThing.size.x) {
     // fromThing.touching.left = true
     if (separates) {
@@ -102,9 +102,9 @@ const checkLeft = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean 
   return false
 }
 
-const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean => {
-  if (/* fromThing.collides.right && intoThing.collides.left
-    && */ fromThing.last.x + fromThing.size.x <= intoThing.pos.x
+const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
+  if (/* fromThing.collides.right && */ intoCollides.left
+    && fromThing.last.x + fromThing.size.x <= intoThing.pos.x
     && fromThing.pos.x + fromThing.size.x > intoThing.pos.x) {
     // fromThing.touching.right = true
     if (separates) {

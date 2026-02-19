@@ -2,10 +2,10 @@ import { NumTilesHeight, NumTilesWidth, TileHeight, TileWidth } from '../core/co
 import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
-import { forEachGI, makeGrid, setGridItem } from '../world/grid'
+import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
-import { FacingDir, vec2, vec3 } from '../types'
+import { Collides, collides, FacingDir, vec2, vec3 } from '../types'
 import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwAngle, throwPos } from '../data/actor-data'
 import { getAnim } from '../data/anim-data'
 
@@ -18,13 +18,20 @@ const dirToAngle = [
   [-45, 0, 45]
 ]
 
-const getWall = (x:number, y:number):[number, number, number, number] => {
+const getWall = (grid:Grid<number>, x:number, y:number):[number, number, number, number, Collides] => {
   const xx = x * TileWidth
   const yy = y * TileHeight
   const w = TileWidth
   const h = TileHeight
 
-  return [xx, yy, w, h]
+  const c = collides(
+    x !== 0 && getGridItem(grid, x - 1, y) !== 0,
+    x !== grid.width - 1 && getGridItem(grid, x + 1, y) !== 0,
+    y !== 0 && getGridItem(grid, x, y - 1) !== 0,
+    y !== grid.height - 1 && getGridItem(grid, x, y + 1) !== 0
+  )
+
+  return [xx, yy, w, h, c]
 }
 
 export class Scene {
@@ -116,7 +123,7 @@ export class Scene {
     if (Debug.on) {
       forEachGI(this.walls, (x, y, wall) => {
         if (wall !== 0) return
-        const [xx, yy, w, h] = getWall(x, y)
+        const [xx, yy, w, h] = getWall(this.walls, x, y)
         drawDebug(xx, yy, w, h, '#ff0000')
       })
     }
@@ -175,8 +182,8 @@ export class Scene {
       let collided = false
       forEachGI(this.walls, (x, y, wall) => {
         if (wall !== 0) return
-        const [xx, yy, w, h] = getWall(x, y)
-        if (collideWall(thing, xx, yy, w, h)) {
+        const [xx, yy, w, h, collides] = getWall(this.walls, x, y)
+        if (collideWall(thing, xx, yy, w, h, collides)) {
           collided = true
         }
       })

@@ -36,7 +36,7 @@ const mapGI = <T, TT>(grid:Grid<T>, callback:(x:number, y:number, item:T) => TT)
   }
 }
 
-const getGridItem = <T>(grid:Grid<T>, x:number, y:number):T | undefined => {
+export const getGridItem = <T>(grid:Grid<T>, x:number, y:number):T | undefined => {
   if (x < 0 || y < 0 || x >= grid.width || y >= grid.height) {
     return
   }
