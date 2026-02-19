@@ -1,5 +1,6 @@
 import { Thing } from '../data/actor-data'
 import { vec3 } from '../types'
+import { toRadian } from '../util/utils'
 
 // TODO: get from const
 const fps = 60
@@ -7,10 +8,14 @@ const fps = 60
 export const updatePhysics = (thing:Thing) => {
   thing.last.x = thing.pos.x
   thing.last.y = thing.pos.y
-  thing.vel.z -= (60 / fps) * thing.gravityFactor
-  thing.pos.x += thing.vel.x / fps
-  thing.pos.y += thing.vel.y / fps
-  thing.pos.z += thing.vel.z / fps
+  thing.zVel -= (60 / fps) * thing.gravityFactor
+
+  const velX = thing.vel * Math.cos(toRadian(thing.angle))
+  const velY = thing.vel * Math.sin(toRadian(thing.angle))
+
+  thing.pos.x += velX / fps
+  thing.pos.y += velY / fps
+  thing.pos.z += thing.zVel / fps
 }
 
 // Returns true if two physics bodies overlap.
@@ -114,20 +119,20 @@ const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean
 // remove fromThing from intoThing
 const separateUp = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y + intoThing.size.y
-  fromThing.vel.y = -fromThing.vel.y * fromThing.bounce
+  fromThing.vel = fromThing.vel * fromThing.bounce
 }
 
 const separateDown = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y - fromThing.size.y
-  fromThing.vel.y = -fromThing.vel.y * fromThing.bounce
+  fromThing.vel = -fromThing.vel * fromThing.bounce
 }
 
 const separateLeft = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x + intoThing.size.x
-  fromThing.vel.x = -fromThing.vel.x * fromThing.bounce
+  fromThing.vel = -fromThing.vel * fromThing.bounce
 }
 
 const separateRight = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x - fromThing.size.x
-  fromThing.vel.x = -fromThing.vel.x * fromThing.bounce
+  fromThing.vel = -fromThing.vel * fromThing.bounce
 }

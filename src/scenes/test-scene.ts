@@ -6,11 +6,17 @@ import { forEachGI, makeGrid, setGridItem } from '../world/grid'
 import { collideWall, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { FacingDir, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwPos, throwVel } from '../data/actor-data'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwAngle, throwPos } from '../data/actor-data'
 import { getAnim } from '../data/anim-data'
 
 const vel = 60
-const diagVel = vel / Math.SQRT2
+// const diagVel = vel / Math.SQRT2
+
+const dirToAngle = [
+  [-135, 180, 135],
+  [-90, 0, 90],
+  [-45, 0, 45]
+]
 
 const getWall = (x:number, y:number):[number, number, number, number] => {
   const xx = x * TileSize
@@ -55,24 +61,29 @@ export class Scene {
   update () {
     let yvel = 0
     let xvel = 0
+    let angles = []
 
     if (keys.get('ArrowUp')) {
       yvel -= 1
+      angles.push(270)
       this.guy.facing = FacingDir.Up
     }
 
     if (keys.get('ArrowDown')) {
       yvel += 1
+      angles.push(90)
       this.guy.facing = FacingDir.Down
     }
 
     if (keys.get('ArrowLeft')) {
       xvel -= 1
+      angles.push(180)
       this.guy.facing = FacingDir.Left
     }
 
     if (keys.get('ArrowRight')) {
       xvel += 1
+      angles.push(360)
       this.guy.facing = FacingDir.Right
     }
 
@@ -80,9 +91,12 @@ export class Scene {
       this.charThrow()
     }
 
-    const speed = xvel !== 0 && yvel !== 0 ? diagVel : vel
-    this.guy.vel.x = xvel * speed
-    this.guy.vel.y = yvel * speed
+    if (xvel !== 0 || yvel !== 0) {
+      this.guy.vel = 60
+      this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
+    } else {
+      this.guy.vel = 0
+    }
 
     this.things.forEach(thing => {
       thing.stateTime++
@@ -144,11 +158,14 @@ export class Scene {
     // ground collisions
     this.things.forEach(thing => {
       if (thing.pos.z < 0) {
+        // if the thing was on the ground, stay on the ground
         if (thing.last.z === 0) {
           thing.pos.z = 0
         } else {
+          // bounce event
+          // TODO: zbounce
           thing.pos.z = -thing.pos.z
-          thing.vel.z = -thing.vel.z
+          thing.zVel = -thing.zVel
         }
       }
     })
@@ -192,9 +209,9 @@ export class Scene {
 
   charThrow () {
     const pos = throwPos(this.guy)
-    const vel = throwVel(this.guy)
+    const angle = throwAngle(this.guy)
 
-    const thing = newThing(pos, vel)
+    const thing = newThing(pos, 120, angle)
     this.things.push(thing)
 
     pos.x -= thing.size.x / 2

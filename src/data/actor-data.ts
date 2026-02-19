@@ -17,7 +17,9 @@ export enum ThingState {
 type PhysicsObject = {
   pos:Vec3
   last:Vec3
-  vel:Vec3
+  vel:number
+  zVel:number
+  angle:number
   size:Vec3
   gravityFactor:number
 }
@@ -50,7 +52,9 @@ export const newActor = (pos:Vec3, offset:Vec2):Actor => ({
   facing: FacingDir.Down,
   size: vec3(8, 8, 8),
   last: clone3(pos),
-  vel: vec3(0, 0, 0),
+  vel: 0,
+  zVel: 0,
+  angle: 0,
   gravityFactor: 1,
   bounce: 0,
   state: ThingState.None,
@@ -59,13 +63,15 @@ export const newActor = (pos:Vec3, offset:Vec2):Actor => ({
   dead: false
 })
 
-export const newThing = (pos:Vec3, vel:Vec3):Thing => ({
+export const newThing = (pos:Vec3, vel:number, angle:number):Thing => ({
   type: ThingType.Rock,
   pos,
   size: vec3(3, 3, 3),
   last: clone3(pos),
   offset: vec2(6, 6),
   vel,
+  zVel: 0,
+  angle,
   gravityFactor: 1,
   bounce: 1,
   state: ThingState.Moving,
@@ -88,12 +94,12 @@ export const throwPos = (actor:Actor):Vec3 => {
   }
 }
 
-export const throwVel = (actor:Actor):Vec3 => {
+export const throwAngle = (actor:Actor):number => {
   switch (actor.facing) {
-    case FacingDir.Left: return vec3(-120, 0, 1)
-    case FacingDir.Right: return vec3(120, 0, 1)
-    case FacingDir.Up: return vec3(0, -120, 1)
-    case FacingDir.Down: return vec3(0, 120, 1)
+    case FacingDir.Left: return 180
+    case FacingDir.Right: return 0
+    case FacingDir.Up: return 270
+    case FacingDir.Down: return 90
     default: throw new Error('Bad facing dir')
   }
 }
