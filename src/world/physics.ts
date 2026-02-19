@@ -120,19 +120,23 @@ const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean):boolean
 const separateUp = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y + intoThing.size.y
   fromThing.vel = fromThing.vel * fromThing.bounce
+  fromThing.angle = -fromThing.angle
 }
 
 const separateDown = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y - fromThing.size.y
-  fromThing.vel = -fromThing.vel * fromThing.bounce
+  fromThing.vel = fromThing.vel * fromThing.bounce
+  fromThing.angle = -fromThing.angle
 }
 
 const separateLeft = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x + intoThing.size.x
-  fromThing.vel = -fromThing.vel * fromThing.bounce
+  fromThing.vel = fromThing.vel * fromThing.bounce
+  fromThing.angle = 180 - fromThing.angle
 }
 
 const separateRight = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x - fromThing.size.x
-  fromThing.vel = -fromThing.vel * fromThing.bounce
+  fromThing.vel = fromThing.vel * fromThing.bounce
+  fromThing.angle = 180 - fromThing.angle
 }

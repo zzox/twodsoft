@@ -2,7 +2,7 @@
 export const Width = 240
 export const Height = 160
 
-// size of game in tiles
+// size of tiles
 export const TileWidth = 24
 export const TileHeight = 16
 
