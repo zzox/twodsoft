@@ -1,4 +1,4 @@
-import { Height, TileSize, TileWidth, Width } from './const'
+import { Height, TileHeight, TileWidth, Width } from './const'
 
 let context:CanvasRenderingContext2D
 let image:HTMLImageElement
@@ -9,13 +9,13 @@ export const getContext = ():CanvasRenderingContext2D => context
 export const setImage = (img:HTMLImageElement) => image = img
 
 export const drawTile = (fromIndex:number, x:number, y:number) => {
-  const tRowWidth = (image.width / TileSize)
+  const tRowWidth = (image.width / TileWidth)
   const tRow = fromIndex % tRowWidth
   const tColumn = Math.floor(fromIndex / tRowWidth)
 
   context.drawImage(image,
-    tRow * TileSize, tColumn * TileSize, TileSize, TileSize,
-    x, y, TileSize, TileSize
+    tRow * TileWidth, tColumn * TileHeight, TileWidth, TileHeight,
+    x, y, TileWidth, TileHeight
   )
 }
 

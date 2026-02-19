@@ -1,4 +1,4 @@
-import { TileHeight, TileSize, TileWidth } from '../core/const'
+import { NumTilesHeight, NumTilesWidth, TileHeight, TileWidth } from '../core/const'
 import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
@@ -19,10 +19,10 @@ const dirToAngle = [
 ]
 
 const getWall = (x:number, y:number):[number, number, number, number] => {
-  const xx = x * TileSize
-  const yy = y * TileSize
-  const w = TileSize
-  const h = TileSize
+  const xx = x * TileWidth
+  const yy = y * TileHeight
+  const w = TileWidth
+  const h = TileHeight
 
   return [xx, yy, w, h]
 }
@@ -41,15 +41,15 @@ export class Scene {
 
     this.things.push(this.guy)
 
-    this.walls = makeGrid(TileWidth, TileHeight, 1)
-    for (let i = 0; i < TileWidth; i++) {
+    this.walls = makeGrid(NumTilesWidth, NumTilesHeight, 1)
+    for (let i = 0; i < NumTilesWidth; i++) {
       this.addTile(i, 0)
-      this.addTile(i, TileHeight - 1)
+      this.addTile(i, NumTilesHeight - 1)
     }
 
-    for (let i = 0; i < TileHeight; i++) {
+    for (let i = 0; i < NumTilesHeight; i++) {
       this.addTile(0, i)
-      this.addTile(TileWidth - 1, i)
+      this.addTile(NumTilesWidth - 1, i)
     }
     console.log(this.walls)
   }
@@ -110,7 +110,7 @@ export class Scene {
 
   draw () {
     forEachGI(this.walls, (x, y, wall) => {
-      drawTile(wall, x * TileSize, y * TileSize)
+      drawTile(wall, x * TileWidth, y * TileHeight)
     })
 
     if (Debug.on) {

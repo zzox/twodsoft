@@ -10,7 +10,7 @@ export const updatePhysics = (thing:Thing) => {
   thing.last.y = thing.pos.y
   thing.zVel -= (60 / fps) * thing.gravityFactor
 
-  const velX = thing.vel * Math.cos(toRadian(thing.angle))
+  const velX = thing.vel * 1.5 * Math.cos(toRadian(thing.angle))
   const velY = thing.vel * Math.sin(toRadian(thing.angle))
 
   thing.pos.x += velX / fps
