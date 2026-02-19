@@ -34,14 +34,16 @@ const getWall = (grid:Grid<number>, x:number, y:number):[number, number, number,
   return [xx, yy, w, h, c]
 }
 
+const JumpFrames = 5
+
 export class Scene {
   guy:Actor
   things:Thing[] = []
 
   walls:Grid<number>
 
-  // TEMP
-  // colliding = false
+  // player state
+  jumpBuffer:number = JumpFrames + 1
 
   constructor () {
     this.guy = newActor(vec3(100, 80, 0), vec2(4, 8))
@@ -66,40 +68,41 @@ export class Scene {
   }
 
   update () {
+    // player stuff
     let yvel = 0
     let xvel = 0
-    let angles = []
+    this.jumpBuffer++
 
     if (keys.get('ArrowUp')) {
       yvel -= 1
-      angles.push(270)
       this.guy.facing = FacingDir.Up
     }
 
     if (keys.get('ArrowDown')) {
       yvel += 1
-      angles.push(90)
       this.guy.facing = FacingDir.Down
     }
 
     if (keys.get('ArrowLeft')) {
       xvel -= 1
-      angles.push(180)
       this.guy.facing = FacingDir.Left
     }
 
     if (keys.get('ArrowRight')) {
       xvel += 1
-      angles.push(360)
       this.guy.facing = FacingDir.Right
     }
 
     if (justPressed.get('x')) {
-      this.charThrow()
+      this.jumpBuffer = 0
+    }
+
+    if (this.jumpBuffer <= JumpFrames) {
+      this.charJump()
     }
 
     if (justPressed.get('c')) {
-      this.charJump()
+      this.charThrow()
     }
 
     if (xvel !== 0 || yvel !== 0) {
