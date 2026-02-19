@@ -32,6 +32,12 @@ export const overlaps3 = (
   x1 + w1 > x2 && x1 < x2 + w2 && y1 + h1 > y2 && y1 < y2 + h2 && z1 + t1 > z2 && z1 < z2 + t2
   // x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2 <- seam clips
 
+export const thingsOverlap = (t1:Thing, t2:Thing) =>
+  overlaps3(
+    t1.pos.x, t1.pos.y, t1.pos.z, t1.size.x, t1.size.y, t1.size.z,
+    t2.pos.x, t2.pos.y, t2.pos.z, t2.size.x, t2.size.y, t2.size.z
+  )
+
 // Returns true if there's a collision
 export const collideWall = (thing:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
   if (overlaps3(thing.pos.x, thing.pos.y, thing.pos.z, thing.size.x, thing.size.y, thing.size.z, wx, wy, 0, ww, wh, 16)) {
@@ -129,23 +135,27 @@ const checkRight = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCol
 const separateUp = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y + intoThing.size.y
   fromThing.vel = fromThing.vel * fromThing.bounce
+  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
   fromThing.angle = -fromThing.angle
 }
 
 const separateDown = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.y = intoThing.pos.y - fromThing.size.y
   fromThing.vel = fromThing.vel * fromThing.bounce
+  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
   fromThing.angle = -fromThing.angle
 }
 
 const separateLeft = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x + intoThing.size.x
   fromThing.vel = fromThing.vel * fromThing.bounce
+  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
   fromThing.angle = 180 - fromThing.angle
 }
 
 const separateRight = (fromThing:Thing, intoThing:Thing) => {
   fromThing.pos.x = intoThing.pos.x - fromThing.size.x
   fromThing.vel = fromThing.vel * fromThing.bounce
+  if (Math.abs(fromThing.vel) < 3) fromThing.vel = 0
   fromThing.angle = 180 - fromThing.angle
 }

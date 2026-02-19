@@ -3,7 +3,7 @@ import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
-import { collideWall, updatePhysics } from '../world/physics'
+import { collideWall, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { Collides, collides, FacingDir, vec2, vec3 } from '../types'
 import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwAngle, throwPos } from '../data/actor-data'
@@ -44,6 +44,10 @@ export class Scene {
 
   // player state
   jumpBuffer:number = JumpFrames + 1
+
+  // TEMP:
+  pCollided:boolean = false
+  checks:number = 0
 
   constructor () {
     this.guy = newActor(vec3(100, 80, 0), vec2(4, 8))
@@ -164,7 +168,8 @@ export class Scene {
     if (Debug.on) {
       this.things.forEach(thing => {
         // front
-        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y + thing.size.y - thing.size.z - thing.pos.z), thing.size.x, thing.size.z, '#0000ff')
+        const color = thing === this.guy && this.pCollided ? '#00ffff' : '#0000ff'
+        drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y + thing.size.y - thing.size.z - thing.pos.z), thing.size.x, thing.size.z, color)
         // top
         drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y - thing.pos.z - thing.size.y), thing.size.x, thing.size.y)
       })
@@ -179,10 +184,12 @@ export class Scene {
         if (thing.last.z === 0) {
           thing.pos.z = 0
         } else {
-          // bounce event
-          // TODO: zbounce
           thing.pos.z = -thing.pos.z
-          thing.zVel = -thing.zVel
+          thing.zVel = -thing.zVel * thing.bounce
+          thing.vel = thing.vel * thing.bounce
+
+          if (Math.abs(thing.zVel) < 3) thing.zVel = 0
+          if (Math.abs(thing.vel) < 3) thing.vel = 0
         }
       }
     })
@@ -202,6 +209,33 @@ export class Scene {
         this.handleCollision(thing, true)
       }
     })
+
+    this.checks = 0
+    this.pCollided = false
+    const checked = new Map<Thing, Thing[]>()
+    // thing collisions
+    this.things.forEach(thing1 => {
+      this.things.forEach(thing2 => {
+        if (thing1 === thing2) return
+        if (checked.get(thing2)?.includes(thing1)) return
+
+        this.checks++
+
+        this.checkThingCollision(thing1, thing2)
+
+        if (checked.get(thing1)) {
+          checked.get(thing1)!.push(thing2)
+        } else {
+          checked.set(thing1, [thing2])
+        }
+      })
+    })
+  }
+
+  checkThingCollision (t1:Thing, t2:Thing) {
+    if (thingsOverlap(t1, t2)) {
+      this.pCollided = true
+    }
   }
 
   // TODO: move out of scene?
