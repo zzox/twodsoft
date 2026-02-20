@@ -8,6 +8,7 @@ import { Grid } from '../world/grid'
 import { Collides, collides, FacingDir, vec2, vec3 } from '../types'
 import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwAngle, throwPos } from '../data/actor-data'
 import { getAnim } from '../data/anim-data'
+import { randomInt } from '../util/random'
 
 const vel = 60
 // const diagVel = vel / Math.SQRT2
@@ -36,13 +37,20 @@ const getWall = (grid:Grid<number>, x:number, y:number):[number, number, number,
 
 const JumpFrames = 5
 
+type FloorParticle = {
+  x:number
+  y:number
+  index:number
+  frames:number
+}
+
 export class Scene {
-  guy:Actor
+  walls:Grid<number>
+  floorParticles:FloorParticle[] = []
   things:Thing[] = []
 
-  walls:Grid<number>
-
   // player state
+  guy:Actor
   jumpBuffer:number = JumpFrames + 1
 
   // TEMP:
@@ -128,6 +136,11 @@ export class Scene {
     this.checkCollisions()
 
     this.things = this.things.filter(t => !t.dead)
+
+    this.floorParticles = this.floorParticles.filter(fp => {
+      fp.frames--
+      return fp.frames > 0
+    })
   }
 
   draw () {
@@ -142,6 +155,13 @@ export class Scene {
         drawDebug(xx, yy, w, h, '#ff0000')
       })
     }
+
+    getContext().globalAlpha = 0.3
+    this.floorParticles.forEach(fp => {
+      // has a interesting effect when not rounded
+      // drawSprite(fp.x, fp.y, fp.index)
+      drawSprite(Math.round(fp.x), Math.round(fp.y), fp.index)
+    })
 
     const things = this.things.filter(t => true)
       .sort((a, b) => (a.pos.y + a.size.y/* - a.pos.z*/) - (b.pos.y + b.size.y/* - b.pos.z*/))
@@ -192,6 +212,13 @@ export class Scene {
           thing.zVel = -thing.zVel * thing.bounce
           thing.vel = thing.vel * thing.bounce
 
+          if (thing.vel > 60 || thing.zVel > 60) {
+            this.floorParticles.push({
+              x: thing.pos.x - thing.offset.x, y: thing.pos.y - thing.offset.y,
+              index: 224 + randomInt(3), frames: 5
+            })
+          }
+
           if (Math.abs(thing.zVel) < 3) thing.zVel = 0
           if (Math.abs(thing.vel) < 3) thing.vel = 0
         }
@@ -211,6 +238,10 @@ export class Scene {
         } else {
           if (collideWallProj(thing, xx, yy, w, h, collides)) {
             collided = true
+            // this.floorParticles.push({
+            //   x: thing.pos.x - thing.offset.x, y: thing.pos.y - thing.offset.y,
+            //   index: 224 + randomInt(3), frames: 5
+            // })
           }
         }
       })
