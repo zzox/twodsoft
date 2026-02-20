@@ -72,7 +72,7 @@ export const newThing = (pos:Vec3, vel:number, angle:number):Thing => ({
   zVel: 30,
   angle,
   gravityFactor: 1,
-  bounce: 0.9,
+  bounce: 0.8,
   state: ThingState.Moving,
   stateTime: 0,
   health: 5,

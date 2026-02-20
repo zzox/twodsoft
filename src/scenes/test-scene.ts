@@ -1,4 +1,4 @@
-import { NumTilesHeight, NumTilesWidth, TileHeight, TileWidth } from '../core/const'
+import { Height, NumTilesHeight, NumTilesWidth, TileHeight, TileWidth, Width } from '../core/const'
 import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
@@ -45,7 +45,10 @@ type FloorParticle = {
 }
 
 export class Scene {
-  walls:Grid<number>
+  worldx:number = 0
+  worldy:number = 0
+
+  walls!:Grid<number>
   floorParticles:FloorParticle[] = []
   things:Thing[] = []
 
@@ -62,17 +65,7 @@ export class Scene {
 
     this.things.push(this.guy)
 
-    this.walls = makeGrid(NumTilesWidth, NumTilesHeight, 1)
-    for (let i = 0; i < NumTilesWidth; i++) {
-      this.addTile(i, 0)
-      this.addTile(i, NumTilesHeight - 1)
-    }
-
-    for (let i = 0; i < NumTilesHeight; i++) {
-      this.addTile(0, i)
-      this.addTile(NumTilesWidth - 1, i)
-    }
-    console.log(this.walls)
+    this.makeWalls(true)
   }
 
   create () {
@@ -109,6 +102,7 @@ export class Scene {
       this.jumpBuffer = 0
     }
 
+    // TEMP:
     if (justPressed.get('z')) {
       this.things = this.things.filter(t => t === this.guy)
     }
@@ -141,6 +135,8 @@ export class Scene {
       fp.frames--
       return fp.frames > 0
     })
+
+    this.checkExits()
   }
 
   draw () {
@@ -219,8 +215,8 @@ export class Scene {
             })
           }
 
-          if (Math.abs(thing.zVel) < 3) thing.zVel = 0
-          if (Math.abs(thing.vel) < 3) thing.vel = 0
+          if (Math.abs(thing.zVel) < 15) thing.zVel = 0
+          if (Math.abs(thing.vel) < 15) thing.vel = 0
         }
       }
     })
@@ -315,6 +311,59 @@ export class Scene {
     if (this.guy.pos.z === 0) {
       this.guy.zVel = 60
     }
+  }
+
+  makeWalls (doorsOpen:boolean) {
+    this.walls = makeGrid(NumTilesWidth, NumTilesHeight, 1)
+    for (let i = 0; i < NumTilesWidth; i++) {
+      if (doorsOpen && (i === 4 || i === 5)) continue
+      this.addTile(i, 0)
+      this.addTile(i, NumTilesHeight - 1)
+    }
+
+    for (let i = 0; i < NumTilesHeight; i++) {
+      if (doorsOpen && (i === 4 || i === 5)) continue
+      this.addTile(0, i)
+      this.addTile(NumTilesWidth - 1, i)
+    }
+  }
+
+  checkExits () {
+    if (this.guy.pos.x + this.guy.size.x < 0) {
+      this.goNewRoom(FacingDir.Left)
+    } else if (this.guy.pos.x > Width) {
+      this.goNewRoom(FacingDir.Right)
+    } else if (this.guy.pos.y + this.guy.size.y < 0) {
+      this.goNewRoom(FacingDir.Up)
+    } else if (this.guy.pos.y > Height) {
+      this.goNewRoom(FacingDir.Down)
+    }
+  }
+
+  goNewRoom (dir:FacingDir) {
+    switch (dir) {
+      case FacingDir.Left:
+        this.worldx--
+        this.guy.pos.x += (Width + 8)
+        break
+      case FacingDir.Right:
+        this.worldx++
+        this.guy.pos.x -= (Width + 8)
+        break
+      case FacingDir.Up:
+        this.worldy--
+        this.guy.pos.y += (Height + 8)
+        break
+      case FacingDir.Down:
+        this.worldy++
+        this.guy.pos.y -= (Height + 8)
+        break
+    }
+
+    this.floorParticles = []
+    this.things = [this.guy]
+
+    this.makeWalls(true)
   }
 }
 
