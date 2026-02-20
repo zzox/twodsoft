@@ -9,6 +9,7 @@ export enum ThingType {
 export enum ThingState {
   None,
   Moving,
+  // player
   PreThrow,
   Throw
 }
@@ -32,11 +33,13 @@ export type Thing = PhysicsObject & {
   stateTime:number
   offset:Vec2
   bounce:number
+  held:boolean
 }
 
 // actor is a thing that is alive
 export type Actor = Thing & {
   facing:FacingDir
+  holding?:Thing
 }
 
 // type Wall = {
@@ -59,7 +62,8 @@ export const newActor = (pos:Vec3, offset:Vec2):Actor => ({
   state: ThingState.None,
   stateTime: 0,
   health: 10,
-  dead: false
+  dead: false,
+  held: false
 })
 
 export const newThing = (pos:Vec3, vel:number, angle:number):Thing => ({
@@ -76,7 +80,8 @@ export const newThing = (pos:Vec3, vel:number, angle:number):Thing => ({
   state: ThingState.Moving,
   stateTime: 0,
   health: 5,
-  dead: false
+  dead: false,
+  held: false
 })
 
 export const centerX = (thing:Thing):number => thing.pos.x + thing.size.x / 2

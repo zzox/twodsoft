@@ -55,6 +55,8 @@ export class Scene {
   // player state
   guy:Actor
   jumpBuffer:number = JumpFrames + 1
+  throwTime?:number
+  facingDirs:FacingDir[] = []
 
   // TEMP:
   pCollided:boolean = false
@@ -78,24 +80,36 @@ export class Scene {
     let xvel = 0
     this.jumpBuffer++
 
+    if (justPressed.get('ArrowUp')) this.addFacingDir(FacingDir.Up)
     if (keys.get('ArrowUp')) {
       yvel -= 1
-      this.guy.facing = FacingDir.Up
+    } else {
+      this.removeFacingDir(FacingDir.Up)
     }
 
+    if (justPressed.get('ArrowDown')) this.addFacingDir(FacingDir.Down)
     if (keys.get('ArrowDown')) {
       yvel += 1
-      this.guy.facing = FacingDir.Down
+    } else {
+      this.removeFacingDir(FacingDir.Down)
     }
 
+    if (justPressed.get('ArrowLeft')) this.addFacingDir(FacingDir.Left)
     if (keys.get('ArrowLeft')) {
       xvel -= 1
-      this.guy.facing = FacingDir.Left
+    } else {
+      this.removeFacingDir(FacingDir.Left)
     }
 
+    if (justPressed.get('ArrowRight')) this.addFacingDir(FacingDir.Right)
     if (keys.get('ArrowRight')) {
       xvel += 1
-      this.guy.facing = FacingDir.Right
+    } else {
+      this.removeFacingDir(FacingDir.Right)
+    }
+
+    if (this.facingDirs.length > 0) {
+      this.guy.facing = this.facingDirs[this.facingDirs.length - 1]
     }
 
     if (justPressed.get('x')) {
@@ -365,5 +379,13 @@ export class Scene {
 
     this.makeWalls(true)
   }
-}
 
+  addFacingDir (dir:FacingDir) {
+    this.removeFacingDir(dir)
+    this.facingDirs.push(dir)
+  }
+
+  removeFacingDir (dir:FacingDir) {
+    this.facingDirs = this.facingDirs.filter(d => d !== dir)
+  }
+}
