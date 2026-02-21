@@ -38,6 +38,7 @@ export type Thing = PhysicsObject & {
 
 // actor is a thing that is alive
 export type Actor = Thing & {
+  isActor:true,
   facing:FacingDir
   holding?:Thing
 }
@@ -63,25 +64,26 @@ export const newActor = (pos:Vec3, offset:Vec2):Actor => ({
   stateTime: 0,
   health: 10,
   dead: false,
-  held: false
+  held: false,
+  isActor: true
 })
 
-export const newThing = (pos:Vec3, vel:number, angle:number):Thing => ({
+export const newThing = (pos:Vec3, angle:number, held:boolean = false, vel?:number, zVel?:number):Thing => ({
   type: ThingType.Rock,
   pos,
   size: vec3(3, 3, 3),
   last: clone3(pos),
   offset: vec2(6, 6),
-  vel,
-  zVel: 30,
+  vel: vel || 0,
+  zVel: zVel || 0,
   angle,
   gravityFactor: 1,
   bounce: 0.8,
-  state: ThingState.Moving,
+  state: held ? ThingState.None : ThingState.Moving,
   stateTime: 0,
   health: 5,
   dead: false,
-  held: false
+  held
 })
 
 export const centerX = (thing:Thing):number => thing.pos.x + thing.size.x / 2
@@ -98,12 +100,27 @@ export const throwPos = (actor:Actor):Vec3 => {
   }
 }
 
-export const throwAngle = (actor:Actor):number => {
+export const heldPos = (actor:Actor):Vec3 => {
   switch (actor.facing) {
+    case FacingDir.Left: return vec3(centerX(actor), centerY(actor) - 6, actor.pos.z + 6)
+    case FacingDir.Right: return vec3(centerX(actor), centerY(actor) + 6, actor.pos.z + 6)
+    case FacingDir.Up: return vec3(centerX(actor) + 6, centerY(actor), actor.pos.z + 6)
+    case FacingDir.Down: return vec3(centerX(actor) - 6, centerY(actor), actor.pos.z + 6)
+    default: throw new Error('Bad facing dir')
+  }
+}
+
+export const facingAngle = (facing:FacingDir):number => {
+  switch (facing) {
     case FacingDir.Left: return 180
     case FacingDir.Right: return 0
     case FacingDir.Up: return 270
     case FacingDir.Down: return 90
     default: throw new Error('Bad facing dir')
   }
+}
+
+export const setState = (thing:Thing, state:ThingState) => {
+  thing.stateTime = 0
+  thing.state = state
 }

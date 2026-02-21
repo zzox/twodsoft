@@ -5,12 +5,12 @@ import { Debug } from '../util/debug'
 import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
 import { collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
-import { Collides, collides, FacingDir, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, throwAngle, throwPos } from '../data/actor-data'
+import { clone3, Collides, collides, FacingDir, vec2, vec3 } from '../types'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, heldPos, setState } from '../data/actor-data'
 import { getAnim } from '../data/anim-data'
 import { randomInt } from '../util/random'
 
-const vel = 60
+const guyRunVel = 60
 // const diagVel = vel / Math.SQRT2
 
 const dirToAngle = [
@@ -55,7 +55,7 @@ export class Scene {
   // player state
   guy:Actor
   jumpBuffer:number = JumpFrames + 1
-  throwTime?:number
+  throwTime:number = 0
   facingDirs:FacingDir[] = []
 
   // TEMP:
@@ -75,33 +75,33 @@ export class Scene {
   }
 
   update () {
-    // player stuff
+    /////////// START PLAYER STUFF ///////////
     let yvel = 0
     let xvel = 0
     this.jumpBuffer++
 
-    if (justPressed.get('ArrowUp')) this.addFacingDir(FacingDir.Up)
+    if (this.guy.state === T$.None && justPressed.get('ArrowUp')) this.addFacingDir(FacingDir.Up)
     if (keys.get('ArrowUp')) {
       yvel -= 1
     } else {
       this.removeFacingDir(FacingDir.Up)
     }
 
-    if (justPressed.get('ArrowDown')) this.addFacingDir(FacingDir.Down)
+    if (this.guy.state === T$.None && justPressed.get('ArrowDown')) this.addFacingDir(FacingDir.Down)
     if (keys.get('ArrowDown')) {
       yvel += 1
     } else {
       this.removeFacingDir(FacingDir.Down)
     }
 
-    if (justPressed.get('ArrowLeft')) this.addFacingDir(FacingDir.Left)
+    if (this.guy.state === T$.None && justPressed.get('ArrowLeft')) this.addFacingDir(FacingDir.Left)
     if (keys.get('ArrowLeft')) {
       xvel -= 1
     } else {
       this.removeFacingDir(FacingDir.Left)
     }
 
-    if (justPressed.get('ArrowRight')) this.addFacingDir(FacingDir.Right)
+    if (this.guy.state === T$.None && justPressed.get('ArrowRight')) this.addFacingDir(FacingDir.Right)
     if (keys.get('ArrowRight')) {
       xvel += 1
     } else {
@@ -122,23 +122,32 @@ export class Scene {
     }
 
     if (this.jumpBuffer <= JumpFrames) {
-      this.charJump()
+      this.guyJump()
     }
 
-    if (justPressed.get('c')) {
-      this.charThrow()
+    if (this.guy.state === T$.None && justPressed.get('c')) {
+      this.guyStartThrow()
+    }
+
+    if (this.guy.state === T$.PreThrow && !keys.get('c')) {
+      this.guyThrow()
+    }
+
+    if (this.guy.state === T$.Throw && this.guy.stateTime > 60) {
+      setState(this.guy, T$.None)
     }
 
     if (xvel !== 0 || yvel !== 0) {
-      this.guy.vel = 60
+      this.guy.vel = guyRunVel
       this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
     } else {
       this.guy.vel = 0
     }
+    /////////// END PLAYER STUFF ///////////
 
     this.things.forEach(thing => {
       thing.stateTime++
-      updatePhysics(thing)
+      if (!thing.held) updatePhysics(thing)
     })
 
     this.checkCollisions()
@@ -310,18 +319,39 @@ export class Scene {
     setGridItem(this.walls, x, y, 0)
   }
 
-  charThrow () {
-    const pos = throwPos(this.guy)
-    const angle = throwAngle(this.guy)
+  guyStartThrow () {
+    setState(this.guy, T$.PreThrow)
+    const pos = heldPos(this.guy)
+    const angle = facingAngle(this.guy.facing)
 
-    const thing = newThing(pos, 120, angle)
+    const thing = newThing(pos, angle, true)
+    this.guy.holding = thing
     this.things.push(thing)
-
-    pos.x -= thing.size.x / 2
-    pos.y -= thing.size.y / 2
   }
 
-  charJump () {
+  guyThrow () {
+    const pos = throwPos(this.guy)
+    const angle = facingAngle(this.guy.facing)
+    const thing = this.guy.holding
+
+    if (!thing) {
+      throw new Error('No thing to throw')
+    }
+
+    thing.held = false
+    thing.zVel = 30
+    thing.vel = 120
+    thing.pos = clone3(pos)
+    // center thing util?
+    pos.x -= thing.size.x / 2
+    pos.y -= thing.size.y / 2
+    thing.angle = angle
+
+    setState(this.guy, T$.Throw)
+    this.guy.holding = undefined
+  }
+
+  guyJump () {
     if (this.guy.pos.z === 0) {
       this.guy.zVel = 60
     }

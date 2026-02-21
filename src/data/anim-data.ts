@@ -9,6 +9,7 @@ type Anim = {
 const anims = new Map<ThingType, Map<ThingState, Anim>>()
 
 const ballAnims = new Map()
+ballAnims.set(ThingState.None, { repeats: false, frames: [0], speed: 1 })
 ballAnims.set(ThingState.Moving, { repeats: true, frames: [0, 1], speed: 5 })
 anims.set(ThingType.Rock, ballAnims)
 
