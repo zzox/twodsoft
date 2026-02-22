@@ -294,10 +294,10 @@ export class Scene {
         } else {
           if (collideWallProj(thing, xx, yy, w, h, collides)) {
             collided = true
-            // this.floorParticles.push({
-            //   x: thing.pos.x - thing.offset.x, y: thing.pos.y - thing.offset.y,
-            //   index: 224 + randomInt(3), frames: 5
-            // })
+            this.floorParticles.push({
+              x: thing.pos.x - thing.offset.x, y: thing.pos.y - thing.offset.y - thing.pos.z,
+              index: 224 + randomInt(3), frames: 5
+            })
           }
         }
       })

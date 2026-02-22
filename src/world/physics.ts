@@ -58,37 +58,38 @@ export const collideWallXY = (thing:Thing, wx:number, wy:number, ww:number, wh:n
 }
 
 const checkWallDirectionalCollision = (fromThing:Thing, intoWall:Thing, intoCollides:Collides):boolean => {
-  const zHeight = fromThing.pos.z / 2
+  const zHeight = fromThing.pos.z
 
   let collided = false
   if (intoCollides.down
-    && fromThing.last.y >= intoWall.pos.y + intoWall.size.y - zHeight
-    && fromThing.pos.y < intoWall.pos.y + intoWall.size.y - zHeight) {
-    fromThing.pos.y = intoWall.pos.y + intoWall.size.y - zHeight
+    && fromThing.last.y >= intoWall.pos.y + intoWall.size.y
+    && fromThing.pos.y < intoWall.pos.y + intoWall.size.y) {
+    fromThing.pos.y = intoWall.pos.y + intoWall.size.y
     bounceY(fromThing)
     collided = true
   }
 
   if (intoCollides.up
-    && fromThing.last.y + fromThing.size.y <= intoWall.pos.y + zHeight
-    && fromThing.pos.y + fromThing.size.y > intoWall.pos.y + zHeight) {
-    fromThing.pos.y = intoWall.pos.y + zHeight
+    && fromThing.last.y + fromThing.size.y <= intoWall.pos.y
+    && fromThing.pos.y + fromThing.size.y > intoWall.pos.y) {
+    fromThing.pos.y = intoWall.pos.y - fromThing.size.y
+    console.log('hit')
     bounceY(fromThing)
     collided = true
   }
 
   if (intoCollides.right
-    && fromThing.last.x >= intoWall.pos.x + intoWall.size.x - zHeight
-    && fromThing.pos.x < intoWall.pos.x + intoWall.size.x - zHeight) {
-    fromThing.pos.x = intoWall.pos.x + intoWall.size.x - zHeight
+    && fromThing.last.x >= intoWall.pos.x + intoWall.size.x
+    && fromThing.pos.x < intoWall.pos.x + intoWall.size.x) {
+    fromThing.pos.x = intoWall.pos.x + intoWall.size.x
     bounceX(fromThing)
     collided = true
   }
 
   if (intoCollides.left
-    && fromThing.last.x + fromThing.size.x <= intoWall.pos.x + zHeight
-    && fromThing.pos.x + fromThing.size.x > intoWall.pos.x + zHeight) {
-    fromThing.pos.x = intoWall.pos.x + zHeight
+    && fromThing.last.x + fromThing.size.x <= intoWall.pos.x
+    && fromThing.pos.x + fromThing.size.x > intoWall.pos.x) {
+    fromThing.pos.x = intoWall.pos.x - fromThing.size.x
     bounceX(fromThing)
     collided = true
   }
