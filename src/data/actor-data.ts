@@ -100,7 +100,7 @@ export const throwPos = (actor:Actor):Vec3 => {
   }
 }
 
-export const heldPos = (actor:Actor):Vec3 => {
+export const holdPos = (actor:Actor):Vec3 => {
   switch (actor.facing) {
     case FacingDir.Left: return vec3(centerX(actor), centerY(actor) - 6, actor.pos.z + 6)
     case FacingDir.Right: return vec3(centerX(actor), centerY(actor) + 6, actor.pos.z + 6)

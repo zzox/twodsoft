@@ -6,7 +6,7 @@ import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
 import { collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { clone3, Collides, collides, FacingDir, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, heldPos, setState } from '../data/actor-data'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos } from '../data/actor-data'
 import { getAnim } from '../data/anim-data'
 import { randomInt } from '../util/random'
 
@@ -80,35 +80,35 @@ export class Scene {
     let xvel = 0
     this.jumpBuffer++
 
-    if (this.guy.state === T$.None && justPressed.get('ArrowUp')) this.addFacingDir(FacingDir.Up)
+    if (justPressed.get('ArrowUp')) this.addFacingDir(FacingDir.Up)
     if (keys.get('ArrowUp')) {
       yvel -= 1
     } else {
       this.removeFacingDir(FacingDir.Up)
     }
 
-    if (this.guy.state === T$.None && justPressed.get('ArrowDown')) this.addFacingDir(FacingDir.Down)
+    if (justPressed.get('ArrowDown')) this.addFacingDir(FacingDir.Down)
     if (keys.get('ArrowDown')) {
       yvel += 1
     } else {
       this.removeFacingDir(FacingDir.Down)
     }
 
-    if (this.guy.state === T$.None && justPressed.get('ArrowLeft')) this.addFacingDir(FacingDir.Left)
+    if (justPressed.get('ArrowLeft')) this.addFacingDir(FacingDir.Left)
     if (keys.get('ArrowLeft')) {
       xvel -= 1
     } else {
       this.removeFacingDir(FacingDir.Left)
     }
 
-    if (this.guy.state === T$.None && justPressed.get('ArrowRight')) this.addFacingDir(FacingDir.Right)
+    if (justPressed.get('ArrowRight')) this.addFacingDir(FacingDir.Right)
     if (keys.get('ArrowRight')) {
       xvel += 1
     } else {
       this.removeFacingDir(FacingDir.Right)
     }
 
-    if (this.facingDirs.length > 0) {
+    if (this.facingDirs.length > 0 && this.guy.state === T$.None) {
       this.guy.facing = this.facingDirs[this.facingDirs.length - 1]
     }
 
@@ -137,8 +137,9 @@ export class Scene {
       setState(this.guy, T$.None)
     }
 
-    if (xvel !== 0 || yvel !== 0) {
-      this.guy.vel = guyRunVel
+    if ((xvel !== 0 || yvel !== 0) && this.guy.state !== T$.Throw) {
+      const vel = this.guy.state === T$.PreThrow ? guyRunVel / 2 : guyRunVel
+      this.guy.vel = vel
       this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
     } else {
       this.guy.vel = 0
@@ -148,6 +149,13 @@ export class Scene {
     this.things.forEach(thing => {
       thing.stateTime++
       if (!thing.held) updatePhysics(thing)
+    })
+
+    this.things.forEach(thing => {
+      const t = thing as Actor
+      if (t.isActor && t.holding) {
+        t.holding.pos = holdPos(t)
+      }
     })
 
     this.checkCollisions()
@@ -226,6 +234,7 @@ export class Scene {
         // if the thing was on the ground, stay on the ground
         if (thing.last.z === 0) {
           thing.pos.z = 0
+          thing.zVel = 0
         } else {
           thing.pos.z = -thing.pos.z
           thing.zVel = -thing.zVel * thing.bounce
@@ -321,7 +330,7 @@ export class Scene {
 
   guyStartThrow () {
     setState(this.guy, T$.PreThrow)
-    const pos = heldPos(this.guy)
+    const pos = holdPos(this.guy)
     const angle = facingAngle(this.guy.facing)
 
     const thing = newThing(pos, angle, true)
