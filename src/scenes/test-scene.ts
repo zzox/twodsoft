@@ -14,9 +14,9 @@ const guyRunVel = 60
 // const diagVel = vel / Math.SQRT2
 
 const dirToAngle = [
-  [-135, 180, 135],
-  [-90, 0, 90],
-  [-45, 0, 45]
+  [225, 180, 135],
+  [270, 0, 90],
+  [315, 0, 45]
 ]
 
 const getWall = (grid:Grid<number>, x:number, y:number):[number, number, number, number, Collides] => {
@@ -121,7 +121,9 @@ export class Scene {
       this.things = this.things.filter(t => t === this.guy)
     }
 
-    if (this.jumpBuffer <= JumpFrames) {
+    const touchingGround = this.guy.pos.z === 0
+
+    if (this.guy.state === T$.None && this.jumpBuffer <= JumpFrames && touchingGround) {
       this.guyJump()
     }
 
@@ -137,7 +139,33 @@ export class Scene {
       setState(this.guy, T$.None)
     }
 
-    if ((xvel !== 0 || yvel !== 0) && this.guy.state !== T$.Throw) {
+    if (!touchingGround) {
+      let targetAngle = dirToAngle[xvel + 1][yvel + 1]
+      if (Math.abs(this.guy.angle - targetAngle) > 180) {
+        targetAngle -= 360
+      }
+      const angleDiff = Math.abs(this.guy.angle - targetAngle)
+      // confusing way to say we lessen velocity and change target angle if
+      // the player is trying to readjust in mid-air
+      if (xvel !== 0 || yvel !== 0) {
+        if (this.guy.vel === 0) {
+          this.guy.angle = targetAngle
+          this.guy.vel = 2
+        } else if (angleDiff > 160 && angleDiff < 200) {
+          this.guy.vel = Math.max(this.guy.vel - 2, 0)
+        } else if (angleDiff === 0) {
+          this.guy.vel = Math.min(this.guy.vel + 2, guyRunVel)
+        } else if (angleDiff < 20) {
+          this.guy.angle += (targetAngle > this.guy.angle ? 1 : -1)
+          this.guy.vel = Math.min(this.guy.vel + 1, guyRunVel)
+        } else {
+          this.guy.angle += (targetAngle > this.guy.angle ? 3 : -3)
+          this.guy.vel = Math.max(this.guy.vel - 1, 0)
+        }
+      } else {
+        this.guy.vel = Math.max(this.guy.vel - 5, 0)
+      }
+    } else if ((xvel !== 0 || yvel !== 0) && this.guy.state !== T$.Throw) {
       const vel = this.guy.state === T$.PreThrow ? guyRunVel / 2 : guyRunVel
       this.guy.vel = vel
       this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
@@ -361,9 +389,7 @@ export class Scene {
   }
 
   guyJump () {
-    if (this.guy.pos.z === 0) {
-      this.guy.zVel = 60
-    }
+    this.guy.zVel = 60
   }
 
   makeWalls (doorsOpen:boolean) {
