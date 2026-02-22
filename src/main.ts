@@ -100,16 +100,21 @@ const resizeCanvas = () => {
   const availW = canvas.parentElement!.getBoundingClientRect().width
   const availH = canvas.parentElement!.getBoundingClientRect().height
 
-  const maxW = Math.floor(availW / (w - padding))
-  const maxH = Math.floor(availH / (h - padding))
+  const scale = window.devicePixelRatio
+
+  const maxW = Math.floor(availW / (w * scale - padding))
+  const maxH = Math.floor(availH / (h * scale - padding))
   // lower than maxMultiplier, but at least two
   const multi = Math.max(Math.min(Math.min(maxW, maxH), maxMulti), 1)
 
-  canvas.style.width = `${multi * w}px`
-  canvas.style.height = `${multi * h}px`
+  const width = Math.floor(multi * w * scale)
+  const height = Math.floor(multi * h * scale)
 
-  fixed.style.left = `${(availW - (multi * w)) / 2}px`
-  fixed.style.top = `${(availH - (multi * h)) / 2}px`
+  canvas.style.width = `${width}px`
+  canvas.style.height = `${height}px`
+
+  fixed.style.left = `${(availW - (width)) / 2}px`
+  fixed.style.top = `${(availH - (height)) / 2}px`
 }
 
 const run = async () => {
