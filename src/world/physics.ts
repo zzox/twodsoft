@@ -57,23 +57,20 @@ export const collideWallXY = (thing:Thing, wx:number, wy:number, ww:number, wh:n
   return false
 }
 
-const checkWallDirectionalCollision = (fromThing:Thing, intoWall:Thing, intoCollides:Collides):boolean => {
-  const zHeight = fromThing.pos.z
+// Returns true if there's a collision
+export const collideWallUp = (thing:Thing, wx:number, wy:number, ww:number, wh:number):boolean => {
+  if (overlaps(thing.pos.x, thing.pos.y, thing.size.x, thing.size.y, wx, wy - thing.pos.z, ww, wh + thing.pos.z)) {
+    return collideUp(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 32) } as Thing)
+  }
+  return false
+}
 
+const checkWallDirectionalCollision = (fromThing:Thing, intoWall:Thing, intoCollides:Collides):boolean => {
   let collided = false
   if (intoCollides.down
     && fromThing.last.y >= intoWall.pos.y + intoWall.size.y
     && fromThing.pos.y < intoWall.pos.y + intoWall.size.y) {
     fromThing.pos.y = intoWall.pos.y + intoWall.size.y
-    bounceY(fromThing)
-    collided = true
-  }
-
-  if (intoCollides.up
-    && fromThing.last.y + fromThing.size.y <= intoWall.pos.y
-    && fromThing.pos.y + fromThing.size.y > intoWall.pos.y) {
-    fromThing.pos.y = intoWall.pos.y - fromThing.size.y
-    console.log('hit')
     bounceY(fromThing)
     collided = true
   }
@@ -94,6 +91,18 @@ const checkWallDirectionalCollision = (fromThing:Thing, intoWall:Thing, intoColl
     collided = true
   }
 
+  return collided
+}
+
+const collideUp = (fromThing:Thing, intoWall:Thing) => {
+  const zHeight = fromThing.pos.z
+  let collided = false
+  if (//fromThing.last.y + fromThing.size.y - zHeight <= intoWall.pos.y &&
+    fromThing.pos.y + fromThing.size.y - zHeight > intoWall.pos.y) {
+    fromThing.pos.y = intoWall.pos.y - fromThing.size.y + zHeight
+    bounceY(fromThing)
+    collided = true
+  }
   return collided
 }
 

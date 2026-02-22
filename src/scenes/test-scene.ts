@@ -3,7 +3,7 @@ import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
-import { collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
+import { collideWallProj, collideWallUp, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { clone3, Collides, collides, FacingDir, vec2, vec3 } from '../types'
 import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos } from '../data/actor-data'
@@ -292,7 +292,13 @@ export class Scene {
             collided = true
           }
         } else {
-          if (collideWallProj(thing, xx, yy, w, h, collides)) {
+          // TODO: merge and do the `collides.up` if in `collideWallProj`
+          if (collides.up && collideWallUp(thing, xx, yy, w, h)) {
+            this.floorParticles.push({
+              x: thing.pos.x - thing.offset.x, y: thing.pos.y - thing.offset.y - thing.pos.z,
+              index: 224 + randomInt(3), frames: 60
+            })
+          } else if (collideWallProj(thing, xx, yy, w, h, collides)) {
             collided = true
             this.floorParticles.push({
               x: thing.pos.x - thing.offset.x, y: thing.pos.y - thing.offset.y - thing.pos.z,
