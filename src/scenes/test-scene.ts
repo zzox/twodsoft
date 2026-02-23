@@ -151,8 +151,11 @@ export class Scene {
         const shadowSize = 3
         drawSprite(Math.floor(thing.pos.x) - thing.offset.x, Math.floor(thing.pos.y) - thing.offset.y, 239 + shadowSize)
       } else {
-        const shadowSize = 10
-        drawSprite(Math.floor(centerX(thing) - 8), Math.floor(bottomY(thing) - 8), 239 + shadowSize)
+        const actor = thing as Actor
+        if (Math.floor(actor.hurtFrames / 5) % 2 !== 1) {
+          const shadowSize = 10
+          drawSprite(Math.floor(centerX(thing) - 8), Math.floor(bottomY(thing) - 8), 239 + shadowSize)
+        }
       }
     })
     getContext().globalAlpha = 1.0
@@ -163,11 +166,13 @@ export class Scene {
       } else {
         // PERF:
         const actor = thing as Actor
-        drawSprite(
-          Math.floor(actor.pos.x) - actor.offset.x,
-          Math.floor(actor.pos.y - actor.pos.z) - actor.offset.y,
-          getActorAnim(actor)
-        )
+        if (Math.floor(actor.hurtFrames / 5) % 2 !== 1) {
+          drawSprite(
+            Math.floor(actor.pos.x) - actor.offset.x,
+            Math.floor(actor.pos.y - actor.pos.z) - actor.offset.y,
+            getActorAnim(actor)
+          )
+        }
       }
     })
 
@@ -245,6 +250,10 @@ export class Scene {
     }
 
     // reduce hurt frames until we are ready to get back to our correct state
+    if (this.guy.hurtFrames > 0) {
+      this.guy.hurtFrames--
+    }
+
     if (this.guy.state === T$.Hurt) {
       if (this.guy.stateTime > 10) {
         setState(this.guy, T$.None)

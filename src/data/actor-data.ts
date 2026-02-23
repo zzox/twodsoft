@@ -179,7 +179,9 @@ export const setState = (thing:Thing, state:ThingState) => {
 }
 
 export const hurtActor = (actor:Actor) => {
-  actor.health--
-  setState(actor, ThingState.Hurt)
-  actor.hurtFrames = 10
+  if (actor.hurtFrames === 0) {
+    actor.health--
+    setState(actor, ThingState.Hurt)
+    actor.hurtFrames = 30
+  }
 }
