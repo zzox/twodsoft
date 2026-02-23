@@ -6,6 +6,8 @@ import { toRadian } from '../util/utils'
 const fps = 60
 const gravity = 120
 
+export const allCollides = { left: true, right: true, up: true, down: true }
+
 export const updatePhysics = (thing:Thing) => {
   thing.last.x = thing.pos.x
   thing.last.y = thing.pos.y
@@ -102,7 +104,7 @@ const collideUp = (fromThing:Thing, intoWall:Thing) => {
   return collided
 }
 
-const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
+export const checkDirectionalCollision = (fromThing:Thing, intoThing:Thing, separates:boolean, intoCollides:Collides):boolean => {
   var collided = false
   const upCollide = checkUp(fromThing, intoThing, separates, intoCollides)
   if (upCollide) {

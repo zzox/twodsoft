@@ -16,6 +16,7 @@ export enum ThingType {
 export enum ThingState {
   None,
   Moving,
+  Hurt,
   // player
   PreThrow,
   Throw
@@ -42,12 +43,14 @@ export type Thing = PhysicsObject & {
   animsLength:number
   bounce:number
   held:boolean
+  isActor:boolean
 }
 
 // actor is a thing that is alive
 export type Actor = Thing & {
-  isActor:true,
+  isActor:boolean
   facing:FacingDir
+  hurtFrames:number
   holding?:Thing
 }
 
@@ -67,7 +70,8 @@ const defaultThing:Thing = {
   offset: vec2(0, 0),
   animsLength: 1,
   bounce: 0.0,
-  held: false
+  held: false,
+  isActor: false
 }
 
 const thingData:{ [index: number]:Thing } = {
@@ -85,7 +89,8 @@ const thingData:{ [index: number]:Thing } = {
 const defaultActor:Actor = {
   ...defaultThing,
   isActor: true,
-  facing: FacingDir.Down
+  facing: FacingDir.Down,
+  hurtFrames: 0
 }
 
 const actorData: { [index:number]: Actor } = {
@@ -96,7 +101,11 @@ const actorData: { [index:number]: Actor } = {
     animsLength: 6,
     health: 10
   }, [ThingType.Greenguy]: {
-    ...defaultActor
+    ...defaultActor,
+    offset: vec2(4, 8),
+    size: vec3(8, 8, 8),
+    animsLength: 3,
+    health: 3
   }
 }
 
@@ -167,4 +176,10 @@ export const facingAngle = (facing:FacingDir):number => {
 export const setState = (thing:Thing, state:ThingState) => {
   thing.stateTime = 0
   thing.state = state
+}
+
+export const hurtActor = (actor:Actor) => {
+  actor.health--
+  setState(actor, ThingState.Hurt)
+  actor.hurtFrames = 10
 }

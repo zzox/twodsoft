@@ -3,10 +3,10 @@ import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
-import { collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
+import { allCollides, checkDirectionalCollision, collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { clone3, Collides, collides, FacingDir, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos } from '../data/actor-data'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos, hurtActor } from '../data/actor-data'
 import { getActorAnim, getAnim } from '../data/anim-data'
 import { randomInt } from '../util/random'
 
@@ -62,7 +62,9 @@ export class Scene {
   facingDirs:FacingDir[] = []
 
   // TEMP:
-  pCollided:boolean = false
+  // pCollided:boolean = false
+
+  // DEBUG:
   checks:number = 0
 
   constructor () {
@@ -84,47 +86,6 @@ export class Scene {
   }
 
   update () {
-    /////////// START PLAYER/USER STUFF ///////////
-    let yvel = 0
-    let xvel = 0
-    this.jumpBuffer++
-
-    if (justPressed.get('ArrowUp')) this.addFacingDir(FacingDir.Up)
-    if (keys.get('ArrowUp')) {
-      yvel -= 1
-    } else {
-      this.removeFacingDir(FacingDir.Up)
-    }
-
-    if (justPressed.get('ArrowDown')) this.addFacingDir(FacingDir.Down)
-    if (keys.get('ArrowDown')) {
-      yvel += 1
-    } else {
-      this.removeFacingDir(FacingDir.Down)
-    }
-
-    if (justPressed.get('ArrowLeft')) this.addFacingDir(FacingDir.Left)
-    if (keys.get('ArrowLeft')) {
-      xvel -= 1
-    } else {
-      this.removeFacingDir(FacingDir.Left)
-    }
-
-    if (justPressed.get('ArrowRight')) this.addFacingDir(FacingDir.Right)
-    if (keys.get('ArrowRight')) {
-      xvel += 1
-    } else {
-      this.removeFacingDir(FacingDir.Right)
-    }
-
-    if (this.facingDirs.length > 0 && this.guy.state === T$.None) {
-      this.guy.facing = this.facingDirs[this.facingDirs.length - 1]
-    }
-
-    if (justPressed.get('x')) {
-      this.jumpBuffer = 0
-    }
-
     // TEMP:
     if (justPressed.get('z')) {
       this.things = this.things.filter(t => t === this.guy)
@@ -134,66 +95,7 @@ export class Scene {
       this.openDoors()
     }
 
-    const touchingGround = this.guy.pos.z === 0
-
-    if (
-      (this.guy.state === T$.None || this.guy.state === T$.PreThrow) &&
-      this.jumpBuffer <= JumpFrames && touchingGround
-    ) {
-      this.guyJump()
-    }
-
-    if (this.guy.state === T$.None && justPressed.get('c')) {
-      this.guyStartThrow()
-    }
-
-    if (this.guy.state === T$.PreThrow && !keys.get('c')) {
-      this.guyThrow()
-    }
-
-    if (this.guy.state === T$.Throw && this.guy.stateTime > 60) {
-      setState(this.guy, T$.None)
-    }
-
-    const vel = this.guy.state === T$.PreThrow ? guyRunVel / 2 : guyRunVel
-    if (!touchingGround) {
-      if (this.guy.state === T$.Throw) {
-        // don't do anything with player vel if we are recovering from throwing
-        // while in the air
-      } else {
-        let targetAngle = dirToAngle[xvel + 1][yvel + 1]
-        if (Math.abs(this.guy.angle - targetAngle) > 180) {
-          targetAngle -= 360
-        }
-        const angleDiff = Math.abs(this.guy.angle - targetAngle)
-        // confusing way to say we lessen velocity and change target angle if
-        // the player is trying to readjust in mid-air
-        if (xvel !== 0 || yvel !== 0) {
-          if (this.guy.vel === 0) {
-            this.guy.angle = targetAngle
-            this.guy.vel = 2
-          } else if (angleDiff > 160 && angleDiff < 200) {
-            this.guy.vel = Math.max(this.guy.vel - 2, 0)
-          } else if (angleDiff === 0) {
-            this.guy.vel = Math.min(this.guy.vel + 2, vel)
-          } else if (angleDiff < 20) {
-            this.guy.angle += (targetAngle > this.guy.angle ? 1 : -1)
-            this.guy.vel = Math.min(this.guy.vel + 1, vel)
-          } else {
-            this.guy.angle += (targetAngle > this.guy.angle ? 3 : -3)
-            this.guy.vel = Math.max(this.guy.vel - 1, 0)
-          }
-        } else {
-          this.guy.vel = Math.max(this.guy.vel - 5, 0)
-        }
-      }
-    } else if ((xvel !== 0 || yvel !== 0) && this.guy.state !== T$.Throw) {
-      this.guy.vel = vel
-      this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
-    } else {
-      this.guy.vel = 0
-    }
-    /////////// END PLAYER/USER STUFF ///////////
+    this.updateGuy()
 
     this.things.forEach(thing => {
       thing.stateTime++
@@ -272,11 +174,123 @@ export class Scene {
     if (Debug.on) {
       this.things.forEach(thing => {
         // front
-        const color = thing === this.guy && this.pCollided ? '#00ffff' : '#0000ff'
+        const color = /*thing === this.guy && this.pCollided ? '#00ffff' :*/ '#0000ff'
         drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y + thing.size.y - thing.size.z - thing.pos.z), thing.size.x, thing.size.z, color)
         // top
         drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y - thing.pos.z - thing.size.y), thing.size.x, thing.size.y)
       })
+    }
+  }
+
+  updateGuy () {
+    let yvel = 0
+    let xvel = 0
+    this.jumpBuffer++
+
+    if (justPressed.get('ArrowUp')) this.addFacingDir(FacingDir.Up)
+    if (keys.get('ArrowUp')) {
+      yvel -= 1
+    } else {
+      this.removeFacingDir(FacingDir.Up)
+    }
+
+    if (justPressed.get('ArrowDown')) this.addFacingDir(FacingDir.Down)
+    if (keys.get('ArrowDown')) {
+      yvel += 1
+    } else {
+      this.removeFacingDir(FacingDir.Down)
+    }
+
+    if (justPressed.get('ArrowLeft')) this.addFacingDir(FacingDir.Left)
+    if (keys.get('ArrowLeft')) {
+      xvel -= 1
+    } else {
+      this.removeFacingDir(FacingDir.Left)
+    }
+
+    if (justPressed.get('ArrowRight')) this.addFacingDir(FacingDir.Right)
+    if (keys.get('ArrowRight')) {
+      xvel += 1
+    } else {
+      this.removeFacingDir(FacingDir.Right)
+    }
+
+    if (this.facingDirs.length > 0 && this.guy.state === T$.None) {
+      this.guy.facing = this.facingDirs[this.facingDirs.length - 1]
+    }
+
+    if (justPressed.get('x')) {
+      this.jumpBuffer = 0
+    }
+
+    const touchingGround = this.guy.pos.z === 0
+
+    if (
+      (this.guy.state === T$.None || this.guy.state === T$.PreThrow) &&
+      this.jumpBuffer <= JumpFrames && touchingGround
+    ) {
+      this.guyJump()
+    }
+
+    if (this.guy.state === T$.None && justPressed.get('c')) {
+      this.guyStartThrow()
+    }
+
+    if (this.guy.state === T$.PreThrow && !keys.get('c')) {
+      this.guyThrow()
+    }
+
+    if (this.guy.state === T$.Throw && this.guy.stateTime > 15) {
+      setState(this.guy, T$.None)
+    }
+
+    // reduce hurt frames until we are ready to get back to our correct state
+    if (this.guy.state === T$.Hurt) {
+      if (this.guy.stateTime > 10) {
+        setState(this.guy, T$.None)
+      } else {
+        return
+      }
+    }
+
+    // don't do anything with player vel if we are recovering from throwing
+    // while in the air
+    if (this.guy.state === T$.Throw) {
+      return
+    }
+
+    const vel = this.guy.state === T$.PreThrow ? guyRunVel / 2 : guyRunVel
+    if (!touchingGround) {
+      let targetAngle = dirToAngle[xvel + 1][yvel + 1]
+      if (Math.abs(this.guy.angle - targetAngle) > 180) {
+        targetAngle -= 360
+      }
+      const angleDiff = Math.abs(this.guy.angle - targetAngle)
+      // confusing way to say we lessen velocity and change target angle if
+      // the player is trying to readjust in mid-air
+      if (xvel !== 0 || yvel !== 0) {
+        if (this.guy.vel === 0) {
+          this.guy.angle = targetAngle
+          this.guy.vel = 2
+        } else if (angleDiff > 160 && angleDiff < 200) {
+          this.guy.vel = Math.max(this.guy.vel - 2, 0)
+        } else if (angleDiff === 0) {
+          this.guy.vel = Math.min(this.guy.vel + 2, vel)
+        } else if (angleDiff < 20) {
+          this.guy.angle += (targetAngle > this.guy.angle ? 1 : -1)
+          this.guy.vel = Math.min(this.guy.vel + 1, vel)
+        } else {
+          this.guy.angle += (targetAngle > this.guy.angle ? 3 : -3)
+          this.guy.vel = Math.max(this.guy.vel - 1, 0)
+        }
+      } else {
+        this.guy.vel = Math.max(this.guy.vel - 5, 0)
+      }
+    } else if (xvel !== 0 || yvel !== 0) {
+      this.guy.vel = vel
+      this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
+    } else {
+      this.guy.vel = 0
     }
   }
 
@@ -339,7 +353,7 @@ export class Scene {
     })
 
     this.checks = 0
-    this.pCollided = false
+    // this.pCollided = false
     const checked = new Map<Thing, Thing[]>()
     // thing collisions
     this.things.forEach(thing1 => {
@@ -362,8 +376,32 @@ export class Scene {
 
   checkThingCollision (t1:Thing, t2:Thing) {
     if (thingsOverlap(t1, t2)) {
-      this.pCollided = true
+      // this.pCollided = true
+      if (t1.isActor && t2.isActor) {
+        throw 'Not handled'
+      } else if (!t1.isActor && t2.isActor) {
+        this.thingHitActor(t1, t2 as Actor)
+      } else if (t1.isActor && !t2.isActor) {
+        this.thingHitActor(t2, t1 as Actor)
+      } else {
+        this.thingHitThing(t1, t2)
+      }
     }
+  }
+
+  thingHitActor (thing:Thing, actor:Actor) {
+    // TODO: min hurt vel
+    if (thing.vel > 60) {
+      hurtActor(actor)
+      this.handleCollision(thing, false)
+      actor.vel = thing.vel / 2
+      actor.angle = thing.angle
+      checkDirectionalCollision(thing, actor, true, allCollides)
+    }
+    thing.vel *= 0.5
+  }
+
+  thingHitThing (t1:Thing, t2:Thing) {
   }
 
   // TODO: move out of scene?
@@ -416,6 +454,7 @@ export class Scene {
     thing.angle = angle
 
     setState(this.guy, T$.Throw)
+    if (this.guy.pos.z === 0) this.guy.vel = 0
     this.guy.holding = undefined
   }
 
