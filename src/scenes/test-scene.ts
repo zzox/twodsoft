@@ -52,6 +52,9 @@ export class Scene {
   floorParticles:FloorParticle[] = []
   things:Thing[] = []
 
+  doorsOpen:boolean = false
+  doors:Collides
+
   // player state
   guy:Actor
   jumpBuffer:number = JumpFrames + 1
@@ -67,7 +70,13 @@ export class Scene {
 
     this.things.push(this.guy)
 
-    this.makeWalls(true)
+    this.doors = {
+      left: true,
+      right: true,
+      down: true,
+      up: true
+    }
+    this.makeWalls()
   }
 
   create () {
@@ -75,7 +84,7 @@ export class Scene {
   }
 
   update () {
-    /////////// START PLAYER STUFF ///////////
+    /////////// START PLAYER/USER STUFF ///////////
     let yvel = 0
     let xvel = 0
     this.jumpBuffer++
@@ -119,6 +128,10 @@ export class Scene {
     // TEMP:
     if (justPressed.get('z')) {
       this.things = this.things.filter(t => t === this.guy)
+    }
+
+    if (justPressed.get('o')) {
+      this.openDoors()
     }
 
     const touchingGround = this.guy.pos.z === 0
@@ -172,7 +185,7 @@ export class Scene {
     } else {
       this.guy.vel = 0
     }
-    /////////// END PLAYER STUFF ///////////
+    /////////// END PLAYER/USER STUFF ///////////
 
     this.things.forEach(thing => {
       thing.stateTime++
@@ -398,18 +411,23 @@ export class Scene {
     this.guy.zVel = 60
   }
 
-  makeWalls (doorsOpen:boolean) {
+  openDoors () {
+    this.doorsOpen = true
+    this.makeWalls()
+  }
+
+  makeWalls () {
     this.walls = makeGrid(NumTilesWidth, NumTilesHeight, 1)
     for (let i = 0; i < NumTilesWidth; i++) {
-      if (doorsOpen && (i === 4 || i === 5)) continue
-      this.addTile(i, 0)
-      this.addTile(i, NumTilesHeight - 1)
+      const isDoorPos = (i === 4 || i === 5)
+      if (!this.doorsOpen || !isDoorPos || !this.doors.up) this.addTile(i, 0)
+      if (!this.doorsOpen || !isDoorPos || !this.doors.down) this.addTile(i, NumTilesHeight - 1)
     }
 
     for (let i = 0; i < NumTilesHeight; i++) {
-      if (doorsOpen && (i === 4 || i === 5)) continue
-      this.addTile(0, i)
-      this.addTile(NumTilesWidth - 1, i)
+      const isDoorPos = (i === 4 || i === 5)
+      if (!this.doorsOpen || !isDoorPos || !this.doors.left) this.addTile(0, i)
+      if (!this.doorsOpen || !isDoorPos || !this.doors.right) this.addTile(NumTilesWidth - 1, i)
     }
   }
 
@@ -448,7 +466,7 @@ export class Scene {
     this.floorParticles = []
     this.things = [this.guy]
 
-    this.makeWalls(true)
+    this.makeWalls()
   }
 
   addFacingDir (dir:FacingDir) {
