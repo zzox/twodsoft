@@ -275,7 +275,12 @@ export class Scene {
             })
           }
 
-          if (Math.abs(thing.zVel) < 15) thing.zVel = 0
+          if (Math.abs(thing.zVel) < 10) {
+            // forces a thing to be zero
+            thing.zVel = 0
+            thing.last.z = 0
+            thing.pos.z = 0
+          }
           if (Math.abs(thing.vel) < 15) thing.vel = 0
         }
       }
