@@ -43,24 +43,20 @@ export const thingsOverlap = (t1:Thing, t2:Thing) =>
 
 // Returns true if there's a collision
 export const collideWallProj = (thing:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
+  let collided = false
   if (overlaps(thing.pos.x, thing.pos.y, thing.size.x, thing.size.y, wx, wy, ww, wh)) {
-    return checkWallDirectionalCollision(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 32) } as Thing, wallCollides)
+    collided = checkWallDirectionalCollision(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 32) } as Thing, wallCollides)
   }
-  return false
+  if (!collided && overlaps(thing.pos.x, thing.pos.y, thing.size.x, thing.size.y, wx, wy - thing.pos.z, ww, wh + thing.pos.z)) {
+    return collideUp(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 32) } as Thing)
+  }
+  return collided
 }
 
 // Returns true if there's a collision
 export const collideWallXY = (thing:Thing, wx:number, wy:number, ww:number, wh:number, wallCollides:Collides):boolean => {
   if (overlaps(thing.pos.x, thing.pos.y, thing.size.x, thing.size.y, wx, wy, ww, wh)) {
     return checkDirectionalCollision(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 1) } as Thing, true, wallCollides)
-  }
-  return false
-}
-
-// Returns true if there's a collision
-export const collideWallUp = (thing:Thing, wx:number, wy:number, ww:number, wh:number):boolean => {
-  if (overlaps(thing.pos.x, thing.pos.y, thing.size.x, thing.size.y, wx, wy - thing.pos.z, ww, wh + thing.pos.z)) {
-    return collideUp(thing, { pos: vec3(wx, wy, 0), size: vec3(ww, wh, 32) } as Thing)
   }
   return false
 }
