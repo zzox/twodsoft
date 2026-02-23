@@ -2,8 +2,10 @@ import { clone3, FacingDir, vec2, Vec2, vec3, Vec3 } from '../types'
 
 // tile index of the thing
 export enum ThingType {
+  Nothing = 999,
   Rock = 192,
-  Guy = 64
+  Guy = 64,
+  Greenguy = 96
 }
 
 export enum ThingState {
@@ -32,6 +34,7 @@ export type Thing = PhysicsObject & {
   state:ThingState
   stateTime:number
   offset:Vec2
+  animsLength:number
   bounce:number
   held:boolean
 }
@@ -43,48 +46,91 @@ export type Actor = Thing & {
   holding?:Thing
 }
 
-// type Wall = {
-//   // size:Vec3 <- all are asummed 16x16
-//   pos:Vec3
-// }
-
-export const newActor = (pos:Vec3, offset:Vec2):Actor => ({
-  type: ThingType.Guy,
-  pos,
-  offset,
-  facing: FacingDir.Down,
-  size: vec3(8, 8, 8),
-  last: clone3(pos),
+const defaultThing:Thing = {
+  pos: vec3(0, 0, 0),
+  last: vec3(0, 0, 0),
   vel: 0,
   zVel: 0,
   angle: 0,
+  size: vec3(16, 16, 16),
   gravityFactor: 1,
-  bounce: 0,
+  dead: false,
+  health: 1,
+  type: ThingType.Nothing,
   state: ThingState.None,
   stateTime: 0,
-  health: 10,
-  dead: false,
-  held: false,
-  isActor: true
-})
+  offset: vec2(0, 0),
+  animsLength: 1,
+  bounce: 0.0,
+  held: false
+}
 
-export const newThing = (pos:Vec3, angle:number, held:boolean = false, vel?:number, zVel?:number):Thing => ({
-  type: ThingType.Rock,
-  pos,
-  size: vec3(3, 3, 3),
-  last: clone3(pos),
-  offset: vec2(6, 6),
-  vel: vel || 0,
-  zVel: zVel || 0,
-  angle,
-  gravityFactor: 1,
-  bounce: 0.8,
-  state: held ? ThingState.None : ThingState.Moving,
-  stateTime: 0,
-  health: 5,
-  dead: false,
-  held
-})
+const thingData:{ [index: number]:Thing } = {
+  [ThingType.Rock]: {
+    ...defaultThing,
+    size: vec3(3, 3, 3),
+    offset: vec2(6, 6),
+    animsLength: 2,
+    gravityFactor: 1,
+    bounce: 0.8,
+    health: 5,
+  }
+}
+
+// const actorData: { [index:number]: Actor } = {
+//   [ThingType.Guy]: {
+//     ...defaultThing
+//   }, [ThingType.Greenguy]: {
+//     ...defaultThing
+//   }
+// }
+
+// type Wall = {
+//   // size:Vec3 <- all are asummed 24x16
+//   pos:Vec3
+// }
+
+export const newActor = (type:ThingType, pos:Vec3, offset:Vec2):Actor => {
+  return {
+    type: ThingType.Guy,
+    pos,
+    offset,
+    facing: FacingDir.Down,
+    size: vec3(8, 8, 8),
+    last: clone3(pos),
+    animsLength: 6,
+    vel: 0,
+    zVel: 0,
+    angle: 0,
+    gravityFactor: 1,
+    bounce: 0,
+    state: ThingState.None,
+    stateTime: 0,
+    health: 10,
+    dead: false,
+    held: false,
+    isActor: true
+  }
+}
+
+export const newThing = (type:ThingType, pos:Vec3, angle:number, held:boolean = false, vel?:number, zVel?:number):Thing => {
+  const data = thingData[type]
+
+  return {
+    ...data,
+    type: ThingType.Rock,
+    pos,
+    last: clone3(pos),
+    vel: vel || 0,
+    zVel: zVel || 0,
+
+    state: held ? ThingState.None : ThingState.Moving,
+    // stateTime: 0,
+
+    angle,
+    held
+  }
+}
 
 export const centerX = (thing:Thing):number => thing.pos.x + thing.size.x / 2
 export const centerY = (thing:Thing):number => thing.pos.y + thing.size.y / 2

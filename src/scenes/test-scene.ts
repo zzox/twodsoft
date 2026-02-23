@@ -66,7 +66,7 @@ export class Scene {
   checks:number = 0
 
   constructor () {
-    this.guy = newActor(vec3(100, 80, 0), vec2(4, 8))
+    this.guy = newActor(ThingType.Guy, vec3(100, 80, 0), vec2(4, 8))
 
     this.things.push(this.guy)
 
@@ -380,7 +380,7 @@ export class Scene {
     const pos = holdPos(this.guy)
     const angle = facingAngle(this.guy.facing)
 
-    const thing = newThing(pos, angle, true)
+    const thing = newThing(ThingType.Rock, pos, angle, true)
     this.guy.holding = thing
     this.things.push(thing)
   }
@@ -465,6 +465,10 @@ export class Scene {
 
     this.floorParticles = []
     this.things = [this.guy]
+
+    // lookup
+    // this.doorsOpen = false
+    // doors = {}
 
     this.makeWalls()
   }
