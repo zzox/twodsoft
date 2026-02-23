@@ -7,7 +7,7 @@ import { collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '..
 import { Grid } from '../world/grid'
 import { clone3, Collides, collides, FacingDir, vec2, vec3 } from '../types'
 import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos } from '../data/actor-data'
-import { getAnim } from '../data/anim-data'
+import { getActorAnim, getAnim } from '../data/anim-data'
 import { randomInt } from '../util/random'
 
 const guyRunVel = 60
@@ -66,7 +66,7 @@ export class Scene {
   checks:number = 0
 
   constructor () {
-    this.guy = newActor(ThingType.Guy, vec3(100, 80, 0), vec2(4, 8))
+    this.guy = newActor(ThingType.Guy, vec3(100, 80, 0))
 
     this.things.push(this.guy)
 
@@ -136,7 +136,10 @@ export class Scene {
 
     const touchingGround = this.guy.pos.z === 0
 
-    if (this.guy.state === T$.None && this.jumpBuffer <= JumpFrames && touchingGround) {
+    if (
+      (this.guy.state === T$.None || this.guy.state === T$.PreThrow) &&
+      this.jumpBuffer <= JumpFrames && touchingGround
+    ) {
       this.guyJump()
     }
 
@@ -152,34 +155,39 @@ export class Scene {
       setState(this.guy, T$.None)
     }
 
+    const vel = this.guy.state === T$.PreThrow ? guyRunVel / 2 : guyRunVel
     if (!touchingGround) {
-      let targetAngle = dirToAngle[xvel + 1][yvel + 1]
-      if (Math.abs(this.guy.angle - targetAngle) > 180) {
-        targetAngle -= 360
-      }
-      const angleDiff = Math.abs(this.guy.angle - targetAngle)
-      // confusing way to say we lessen velocity and change target angle if
-      // the player is trying to readjust in mid-air
-      if (xvel !== 0 || yvel !== 0) {
-        if (this.guy.vel === 0) {
-          this.guy.angle = targetAngle
-          this.guy.vel = 2
-        } else if (angleDiff > 160 && angleDiff < 200) {
-          this.guy.vel = Math.max(this.guy.vel - 2, 0)
-        } else if (angleDiff === 0) {
-          this.guy.vel = Math.min(this.guy.vel + 2, guyRunVel)
-        } else if (angleDiff < 20) {
-          this.guy.angle += (targetAngle > this.guy.angle ? 1 : -1)
-          this.guy.vel = Math.min(this.guy.vel + 1, guyRunVel)
-        } else {
-          this.guy.angle += (targetAngle > this.guy.angle ? 3 : -3)
-          this.guy.vel = Math.max(this.guy.vel - 1, 0)
-        }
+      if (this.guy.state === T$.Throw) {
+        // don't do anything with player vel if we are recovering from throwing
+        // while in the air
       } else {
-        this.guy.vel = Math.max(this.guy.vel - 5, 0)
+        let targetAngle = dirToAngle[xvel + 1][yvel + 1]
+        if (Math.abs(this.guy.angle - targetAngle) > 180) {
+          targetAngle -= 360
+        }
+        const angleDiff = Math.abs(this.guy.angle - targetAngle)
+        // confusing way to say we lessen velocity and change target angle if
+        // the player is trying to readjust in mid-air
+        if (xvel !== 0 || yvel !== 0) {
+          if (this.guy.vel === 0) {
+            this.guy.angle = targetAngle
+            this.guy.vel = 2
+          } else if (angleDiff > 160 && angleDiff < 200) {
+            this.guy.vel = Math.max(this.guy.vel - 2, 0)
+          } else if (angleDiff === 0) {
+            this.guy.vel = Math.min(this.guy.vel + 2, vel)
+          } else if (angleDiff < 20) {
+            this.guy.angle += (targetAngle > this.guy.angle ? 1 : -1)
+            this.guy.vel = Math.min(this.guy.vel + 1, vel)
+          } else {
+            this.guy.angle += (targetAngle > this.guy.angle ? 3 : -3)
+            this.guy.vel = Math.max(this.guy.vel - 1, 0)
+          }
+        } else {
+          this.guy.vel = Math.max(this.guy.vel - 5, 0)
+        }
       }
     } else if ((xvel !== 0 || yvel !== 0) && this.guy.state !== T$.Throw) {
-      const vel = this.guy.state === T$.PreThrow ? guyRunVel / 2 : guyRunVel
       this.guy.vel = vel
       this.guy.angle = dirToAngle[xvel + 1][yvel + 1]
     } else {
@@ -253,7 +261,11 @@ export class Scene {
       } else {
         // PERF:
         const actor = thing as Actor
-        drawSprite(Math.floor(actor.pos.x) - actor.offset.x, Math.floor(actor.pos.y - actor.pos.z) - actor.offset.y, 64 + actor.facing)
+        drawSprite(
+          Math.floor(actor.pos.x) - actor.offset.x,
+          Math.floor(actor.pos.y - actor.pos.z) - actor.offset.y,
+          getActorAnim(actor)
+        )
       }
     })
 

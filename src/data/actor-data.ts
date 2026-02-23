@@ -1,5 +1,10 @@
 import { clone3, FacingDir, vec2, Vec2, vec3, Vec3 } from '../types'
 
+// type Wall = {
+//   // size:Vec3 <- all are asummed 24x16
+//   pos:Vec3
+// }
+
 // tile index of the thing
 export enum ThingType {
   Nothing = 999,
@@ -77,39 +82,21 @@ const thingData:{ [index: number]:Thing } = {
   }
 }
 
-// const actorData: { [index:number]: Actor } = {
-//   [ThingType.Guy]: {
-//     ...defaultThing
-//   }, [ThingType.Greenguy]: {
-//     ...defaultThing
-//   }
-// }
+const defaultActor:Actor = {
+  ...defaultThing,
+  isActor: true,
+  facing: FacingDir.Down
+}
 
-// type Wall = {
-//   // size:Vec3 <- all are asummed 24x16
-//   pos:Vec3
-// }
-
-export const newActor = (type:ThingType, pos:Vec3, offset:Vec2):Actor => {
-  return {
-    type: ThingType.Guy,
-    pos,
-    offset,
-    facing: FacingDir.Down,
+const actorData: { [index:number]: Actor } = {
+  [ThingType.Guy]: {
+    ...defaultActor,
+    offset: vec2(4, 8),
     size: vec3(8, 8, 8),
-    last: clone3(pos),
     animsLength: 6,
-    vel: 0,
-    zVel: 0,
-    angle: 0,
-    gravityFactor: 1,
-    bounce: 0,
-    state: ThingState.None,
-    stateTime: 0,
-    health: 10,
-    dead: false,
-    held: false,
-    isActor: true
+    health: 10
+  }, [ThingType.Greenguy]: {
+    ...defaultActor
   }
 }
 
@@ -118,7 +105,7 @@ export const newThing = (type:ThingType, pos:Vec3, angle:number, held:boolean = 
 
   return {
     ...data,
-    type: ThingType.Rock,
+    type,
     pos,
     last: clone3(pos),
     vel: vel || 0,
@@ -129,6 +116,17 @@ export const newThing = (type:ThingType, pos:Vec3, angle:number, held:boolean = 
 
     angle,
     held
+  }
+}
+
+export const newActor = (type:ThingType, pos:Vec3):Actor => {
+  const data = actorData[type]
+
+  return {
+    ...data,
+    type,
+    pos,
+    last: clone3(pos)
   }
 }
 
