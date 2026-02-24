@@ -1,5 +1,5 @@
 import { Height, NumTilesHeight, NumTilesWidth, TileHeight, TileWidth, Width } from '../core/const'
-import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
+import { drawSprite, drawTile, drawDebug, getContext, drawBarBg, drawBar } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
@@ -191,6 +191,25 @@ export class Scene {
         drawDebug(this.debugSquare.x, this.debugSquare.y, this.debugSquare.w, this.debugSquare.h, '#00ff00')
       }
     }
+
+    this.drawUi()
+  }
+
+  drawUi () {
+    drawSprite(Width - 16 - 4, Height - 16, 59)
+
+
+    let percent = 0
+    if (this.guy.state === T$.PreThrow) {
+      percent = this.guy.stateTime / 60
+    } else if (this.guy.state === T$.Throw) {
+      // save throw vel
+    }
+
+    drawBarBg()
+    drawBar(percent/*, color*/)
+    // drawBarTop()
+    drawSprite(32, Height - 16, 51)
   }
 
   updateGuy () {

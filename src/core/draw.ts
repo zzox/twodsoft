@@ -42,3 +42,15 @@ export const clear = (bgColor:string = 'black') => {
   context.fillStyle = bgColor
   context.fillRect(0, 0, Width, Height)
 }
+
+export const drawBarBg = () => {
+  context.drawImage(image,
+    0, 48, 48, 16,
+    0, Height - 16, 48, 16
+  )
+}
+
+export const drawBar = (percent:number) => {
+  context.fillStyle = '#14a02e'
+  context.fillRect(3, Height - 12, Math.floor(42 * percent), 8)
+}
