@@ -10,7 +10,7 @@ export enum ThingType {
   Nothing = 999,
   Rock = 192,
   Guy = 64,
-  Greenguy = 96
+  Greenguy = 112
 }
 
 export enum ThingState {
