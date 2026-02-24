@@ -1,4 +1,4 @@
-import { Actor, Thing, ThingState, ThingType } from './actor-data'
+import { Actor, AnimThingState, Thing, ThingState, ThingType } from './actor-data'
 
 type Anim = {
   repeats:boolean
@@ -6,7 +6,7 @@ type Anim = {
   speed:number
 }
 
-const anims = new Map<ThingType, Map<ThingState, Anim>>()
+const anims = new Map<ThingType, Map<ThingState | AnimThingState, Anim>>()
 
 const ballAnims = new Map()
 ballAnims.set(ThingState.None, { repeats: false, frames: [0], speed: 1 })
@@ -16,7 +16,10 @@ anims.set(ThingType.Rock, ballAnims)
 const guyAnims = new Map()
 guyAnims.set(ThingState.None, { repeats: false, frames: [0], speed: 1 })
 guyAnims.set(ThingState.Moving, { repeats: true, frames: [0, 1, 0, 2], speed: 10 })
-guyAnims.set(ThingState.PreThrow, { repeats: true, frames: [3, 4, 3, 5], speed: 12 })
+guyAnims.set(ThingState.PreThrow, { repeats: false, frames: [3], speed: 1 })
+guyAnims.set(AnimThingState.PreThrowWalk, { repeats: true, frames: [3, 4, 3, 5], speed: 12 })
+guyAnims.set(AnimThingState.JumpUp, { repeats: true, frames: [6, 7], speed: 8 })
+guyAnims.set(AnimThingState.JumpDown, { repeats: true, frames: [8, 9], speed: 8 })
 anims.set(ThingType.Guy, guyAnims)
 
 export const getAnim = (thing:Thing):number => {
@@ -30,8 +33,18 @@ export const getAnim = (thing:Thing):number => {
 
 export const getActorAnim = (actor:Actor):number => {
   let anim = anims.get(actor.type)!.get(ThingState.None)!
-  if (actor.state === ThingState.PreThrow) {
-    anim = anims.get(actor.type)!.get(ThingState.PreThrow)!
+  if (actor.state === ThingState.PreThrow && actor.pos.z === 0) {
+    if (actor.vel > 0) {
+      anim = anims.get(actor.type)!.get(AnimThingState.PreThrowWalk)!
+    } else {
+      anim = anims.get(actor.type)!.get(ThingState.PreThrow)!
+    }
+  } else if (actor.pos.z > 0) {
+    if (actor.zVel > 0) {
+      anim = anims.get(actor.type)!.get(AnimThingState.JumpUp)!
+    } else {
+      anim = anims.get(actor.type)!.get(AnimThingState.JumpDown)!
+    }
   } else if (actor.vel > 0) {
     anim = anims.get(actor.type)!.get(ThingState.Moving)!
   }

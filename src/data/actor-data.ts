@@ -7,10 +7,11 @@ import { clone3, FacingDir, vec2, Vec2, vec3, Vec3 } from '../types'
 
 // tile index of the thing
 export enum ThingType {
-  Nothing = 999,
-  Rock = 192,
+  Nothing = -1,
   Guy = 64,
-  Greenguy = 112
+  Greenguy = 112,
+  Rock = 192,
+  Ball = 194
 }
 
 export enum ThingState {
@@ -20,6 +21,14 @@ export enum ThingState {
   // player
   PreThrow,
   Throw
+}
+
+// anim states that aren't covered in our normal thing states
+// high numbers not to interfere with `ThingState`!
+export enum AnimThingState {
+  JumpUp = 800,
+  JumpDown = 801,
+  PreThrowWalk = 802,
 }
 
 type PhysicsObject = {
@@ -81,8 +90,16 @@ const thingData:{ [index: number]:Thing } = {
     offset: vec2(6, 6),
     animsLength: 2,
     gravityFactor: 1,
-    bounce: 0.8,
+    bounce: 0.5,
     health: 5,
+  }, [ThingType.Ball]: {
+    ...defaultThing,
+    size: vec3(4, 4, 4),
+    offset: vec2(6, 6),
+    animsLength: 2,
+    gravityFactor: 1,
+    bounce: 0.9,
+    health: Infinity,
   }
 }
 
@@ -98,7 +115,7 @@ const actorData: { [index:number]: Actor } = {
     ...defaultActor,
     offset: vec2(4, 8),
     size: vec3(8, 8, 8),
-    animsLength: 6,
+    animsLength: 10,
     health: 10
   }, [ThingType.Greenguy]: {
     ...defaultActor,
