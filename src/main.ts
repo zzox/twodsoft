@@ -7,6 +7,7 @@ import { clear, setContext, setImage } from './core/draw'
 const canvas = document.getElementById('main-canvas') as HTMLCanvasElement
 const fixed = document.getElementsByClassName('fixed')[0] as HTMLDivElement
 let scene:Scene
+let debugScale = 0
 
 let paused:boolean = false
 
@@ -58,6 +59,7 @@ const draw = () => {
     pItems[0].textContent = `FPS: ${Debug.renderFrames.length}, avg: ${Math.round(average(Debug.renderTimes) * 1000)}us`
     pItems[1].textContent = `UPS: ${Debug.updateFrames.length}, avg: ${Math.round(average(Debug.updateTimes) * 1000)}us`
     pItems[2].textContent = `things: ${scene.things.length} checks: ${scene.checks}`
+    pItems[3].textContent = `scale: ${debugScale}`
     fixed.classList.remove('none')
   } else {
     fixed.classList.add('none')
@@ -106,6 +108,8 @@ const resizeCanvas = () => {
   const maxH = Math.floor(availH / (h * scale - padding))
   // lower than maxMultiplier, but at least two
   const multi = Math.max(Math.min(Math.min(maxW, maxH), maxMulti), 1)
+
+  debugScale = multi
 
   const width = Math.floor(multi * w * scale)
   const height = Math.floor(multi * h * scale)

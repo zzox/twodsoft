@@ -3,10 +3,10 @@ import { drawSprite, drawTile, drawDebug, getContext } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
 import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
-import { allCollides, checkDirectionalCollision, collideWallProj, collideWallXY, thingsOverlap, updatePhysics } from '../world/physics'
+import { allCollides, checkDirectionalCollision, collideWallProj, collideWallXY, overlaps, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
-import { clone3, Collides, collides, FacingDir, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos, hurtActor } from '../data/actor-data'
+import { clone3, Collides, collides, FacingDir, sq, Square, vec2, vec3 } from '../types'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos, hurtActor, pickupPos, pickupTypes } from '../data/actor-data'
 import { getActorAnim, getAnim } from '../data/anim-data'
 import { randomInt } from '../util/random'
 
@@ -57,12 +57,14 @@ export class Scene {
 
   // player state
   guy:Actor
+  inventory?:ThingType
   jumpBuffer:number = JumpFrames + 1
   throwTime:number = 0
   facingDirs:FacingDir[] = []
 
   // TEMP:
   // pCollided:boolean = false
+  debugSquare?:Square
 
   // DEBUG:
   checks:number = 0
@@ -184,6 +186,10 @@ export class Scene {
         // top
         drawDebug(Math.floor(thing.pos.x), Math.floor(thing.pos.y - thing.pos.z - thing.size.y), thing.size.x, thing.size.y)
       })
+
+      if (this.debugSquare) {
+        drawDebug(this.debugSquare.x, this.debugSquare.y, this.debugSquare.w, this.debugSquare.h, '#00ff00')
+      }
     }
   }
 
@@ -243,6 +249,15 @@ export class Scene {
 
     if (this.guy.state === T$.PreThrow && !keys.get('c')) {
       this.guyThrow()
+    }
+
+    if (!this.inventory && keys.get('v')) {
+      if (this.guy.pos.z === 0) {
+        this.guyPickUp()
+      } else {
+        // TODO: buffer
+        console.warn('cant pick up in air')
+      }
     }
 
     if (this.guy.state === T$.Throw && this.guy.stateTime > 15) {
@@ -435,13 +450,19 @@ export class Scene {
   }
 
   guyStartThrow () {
+    if (!this.inventory) {
+      console.warn('cant throw nothing')
+      return
+    }
+
     setState(this.guy, T$.PreThrow)
     const pos = holdPos(this.guy)
     const angle = facingAngle(this.guy.facing)
 
-    const thing = newThing(ThingType.Rock, pos, angle, true)
+    const thing = newThing(this.inventory, pos, angle, true)
     this.guy.holding = thing
     this.things.push(thing)
+    this.inventory = undefined
   }
 
   guyThrow () {
@@ -469,6 +490,25 @@ export class Scene {
 
   guyJump () {
     this.guy.zVel = 60
+  }
+
+  guyPickUp () {
+    const pos = pickupPos(this.guy)
+    this.debugSquare = sq(pos.x, pos.y, 16, 16)
+
+    if (this.inventory) {
+      throw new Error('cant pick up')
+    }
+
+    const things = this.things.filter(t =>
+      t.pos.z < 12 && overlaps(pos.x, pos.y, 16, 16, t.pos.x, t.pos.y, t.size.x, t.size.y) && pickupTypes.includes(t.type)
+    )
+
+    if (things.length) {
+      const thing = things[0]
+      thing.dead = true
+      this.inventory = thing.type
+    }
   }
 
   openDoors () {
@@ -525,6 +565,8 @@ export class Scene {
 
     this.floorParticles = []
     this.things = [this.guy]
+
+    this.things.push(newThing(ThingType.Rock, vec3(24, 24, 6)))
 
     // lookup
     // this.doorsOpen = false

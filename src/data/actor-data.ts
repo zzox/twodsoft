@@ -126,7 +126,7 @@ const actorData: { [index:number]: Actor } = {
   }
 }
 
-export const newThing = (type:ThingType, pos:Vec3, angle:number, held:boolean = false, vel?:number, zVel?:number):Thing => {
+export const newThing = (type:ThingType, pos:Vec3, angle:number = 0, held:boolean = false, vel?:number, zVel?:number):Thing => {
   const data = thingData[type]
 
   return {
@@ -180,6 +180,16 @@ export const holdPos = (actor:Actor):Vec3 => {
   }
 }
 
+export const pickupPos = (actor:Actor):Vec2 => {
+  switch (actor.facing) {
+    case FacingDir.Left: return vec2(centerX(actor) - 16 - 8, centerY(actor) - 8)
+    case FacingDir.Right: return vec2(centerX(actor) + 16 - 8, centerY(actor) - 8)
+    case FacingDir.Up: return vec2(centerX(actor) - 8, centerY(actor) - 16 - 8)
+    case FacingDir.Down: return vec2(centerX(actor) - 8, centerY(actor) + 16 - 8)
+    default: throw new Error('Bad facing dir')
+  }
+}
+
 export const facingAngle = (facing:FacingDir):number => {
   switch (facing) {
     case FacingDir.Left: return 180
@@ -202,3 +212,5 @@ export const hurtActor = (actor:Actor) => {
     actor.hurtFrames = 30
   }
 }
+
+export const pickupTypes = [ThingType.Rock, ThingType.Ball]
