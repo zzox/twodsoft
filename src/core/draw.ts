@@ -1,4 +1,4 @@
-import { Height, TileHeight, TileWidth, Width } from './const'
+import { Height, hiTarget, loTarget, maxPercent, TileHeight, TileWidth, Width } from './const'
 
 let context:CanvasRenderingContext2D
 let image:HTMLImageElement
@@ -51,15 +51,15 @@ export const drawBarBg = () => {
 }
 
 export const drawBar = (percent:number) => {
-  if (percent >= 1.0) {
+  if (percent >= maxPercent) {
     context.fillStyle = '#b4202a'
-  } else if (percent > 0.89) {
+  } else if (percent > hiTarget) {
     context.fillStyle = '#df3e23'
-  } else if (percent > 0.77) {
+  } else if (percent > loTarget) {
     context.fillStyle = '#14a02e'
   } else {
     context.fillStyle = '#1a7a3e'
   }
 
-  context.fillRect(3, Height - 12, Math.floor(42 * Math.min(percent, 1.0)), 8)
+  context.fillRect(3, Height - 12, Math.round(42 * Math.min(percent, 1.0)), 8)
 }

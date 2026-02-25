@@ -1,4 +1,4 @@
-import { Height, NumTilesHeight, NumTilesWidth, TileHeight, TileWidth, Width } from '../core/const'
+import { Height, hiTarget, loTarget, maxPercent, NumTilesHeight, NumTilesWidth, TileHeight, TileWidth, Width } from '../core/const'
 import { drawSprite, drawTile, drawDebug, getContext, drawBarBg, drawBar } from '../core/draw'
 import { justPressed, keys } from '../core/keys'
 import { Debug } from '../util/debug'
@@ -60,6 +60,7 @@ export class Scene {
   inventory?:ThingType
   jumpBuffer:number = JumpFrames + 1
   throwTime:number = 0
+  throwRecovery:number = 0
   facingDirs:FacingDir[] = []
 
   // TEMP:
@@ -213,6 +214,7 @@ export class Scene {
       percent = this.guy.stateTime / 60
     } else if (this.guy.state === T$.Throw) {
       // save throw vel
+      percent = this.throwTime / 60
     }
 
     drawBarBg()
@@ -295,7 +297,7 @@ export class Scene {
       }
     }
 
-    if (this.guy.state === T$.Throw && this.guy.stateTime > 15) {
+    if (this.guy.state === T$.Throw && this.guy.stateTime > this.throwRecovery) {
       setState(this.guy, T$.None)
     }
 
@@ -509,9 +511,25 @@ export class Scene {
       throw new Error('No thing to throw')
     }
 
+    this.throwTime = this.guy.stateTime
+    const percent = this.throwTime / 60
+    let vel = 120
+    this.throwRecovery = 30
+    if (percent > maxPercent) {
+      this.throwRecovery = 60
+      vel *= 0.8
+    } else if (percent > hiTarget) {
+      this.throwRecovery = 45
+      vel *= 1.1
+    // } else if (percent > loTarget) {
+    //   this.throwRecovery = 30
+    } else {
+      vel = vel * (percent / loTarget)
+    }
+
     thing.held = false
-    thing.zVel = 30
-    thing.vel = 120
+    thing.zVel = vel / 4
+    thing.vel = vel
     thing.pos = clone3(pos)
     // center thing util?
     pos.x -= thing.size.x / 2
