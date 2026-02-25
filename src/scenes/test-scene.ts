@@ -6,7 +6,7 @@ import { forEachGI, getGridItem, makeGrid, setGridItem } from '../world/grid'
 import { allCollides, checkDirectionalCollision, collideWallProj, collideWallXY, overlaps, thingsOverlap, updatePhysics } from '../world/physics'
 import { Grid } from '../world/grid'
 import { clone3, Collides, collides, FacingDir, sq, Square, vec2, vec3 } from '../types'
-import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos, hurtActor, pickupPos, pickupTypes } from '../data/actor-data'
+import { Actor, bottomY, centerX, newActor, newThing, Thing, ThingType, facingAngle, throwPos, ThingState as T$, setState, holdPos, hurtActor, pickupPos, pickupTypes, ThingState, dropPos } from '../data/actor-data'
 import { getActorAnim, getAnim } from '../data/anim-data'
 import { randomInt } from '../util/random'
 
@@ -65,6 +65,7 @@ export class Scene {
   // TEMP:
   // pCollided:boolean = false
   debugSquare?:Square
+  // autoPickup:boolean = true
 
   // DEBUG:
   checks:number = 0
@@ -196,8 +197,16 @@ export class Scene {
   }
 
   drawUi () {
-    drawSprite(Width - 16 - 4, Height - 16, 59)
-
+    if (this.inventory) {
+      drawSprite(Width - 16 - 4, Height - 16, 59)
+      drawSprite(Width - 16 - 4, Height - 16, this.inventory)
+    } else if (this.guy.state === T$.PreThrow) {
+      const item = this.guy.holding!.type
+      drawSprite(Width - 16 - 4, Height - 16, 59 + this.guy.facing + 1)
+      drawSprite(Width - 16 - 4, Height - 16, item)
+    } else {
+      drawSprite(Width - 16 - 4, Height - 16, 59)
+    }
 
     let percent = 0
     if (this.guy.state === T$.PreThrow) {
@@ -208,8 +217,11 @@ export class Scene {
 
     drawBarBg()
     drawBar(percent/*, color*/)
-    // drawBarTop()
+
+    // drawBarTop() vvv
+    getContext().globalAlpha = 0.5
     drawSprite(32, Height - 16, 51)
+    getContext().globalAlpha = 1.0
   }
 
   updateGuy () {
@@ -270,12 +282,16 @@ export class Scene {
       this.guyThrow()
     }
 
-    if (!this.inventory && keys.get('v')) {
-      if (this.guy.pos.z === 0) {
-        this.guyPickUp()
-      } else {
-        // TODO: buffer
-        console.warn('cant pick up in air')
+    if (this.guy.state === T$.None && justPressed.get('v')/* && keys.get('v') */) {
+      if (!this.inventory) {
+        if (this.guy.pos.z === 0) {
+          this.guyPickUp()
+        } else {
+          // TODO: buffer
+          console.warn('cant pick up in air')
+        }
+      } else if (justPressed.get('v')) {
+        this.guyDrop()
       }
     }
 
@@ -528,6 +544,20 @@ export class Scene {
       thing.dead = true
       this.inventory = thing.type
     }
+  }
+
+  guyDrop () {
+    const pos = dropPos(this.guy)
+
+    if (!this.inventory) {
+      throw new Error('cant pick up')
+    }
+
+    const thing = newThing(this.inventory, vec3(pos.x, pos.y, 3))
+    this.things.push(thing)
+    thing.pos.x -= thing.size.x / 2
+    thing.pos.y -= thing.size.y / 2
+    this.inventory = undefined
   }
 
   openDoors () {

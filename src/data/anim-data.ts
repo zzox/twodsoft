@@ -6,7 +6,7 @@ type Anim = {
   speed:number
 }
 
-const anims = new Map<ThingType, Map<ThingState | AnimThingState, Anim>>()
+export const anims = new Map<ThingType, Map<ThingState | AnimThingState, Anim>>()
 
 const ballAnims = new Map()
 ballAnims.set(ThingState.None, { repeats: false, frames: [0], speed: 1 })

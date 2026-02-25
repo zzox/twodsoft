@@ -190,6 +190,16 @@ export const pickupPos = (actor:Actor):Vec2 => {
   }
 }
 
+export const dropPos = (actor:Actor):Vec2 => {
+  switch (actor.facing) {
+    case FacingDir.Left: return vec2(centerX(actor) - 8, centerY(actor))
+    case FacingDir.Right: return vec2(centerX(actor) + 8, centerY(actor))
+    case FacingDir.Up: return vec2(centerX(actor), centerY(actor) - 8)
+    case FacingDir.Down: return vec2(centerX(actor), centerY(actor) + 8)
+    default: throw new Error('Bad facing dir')
+  }
+}
+
 export const facingAngle = (facing:FacingDir):number => {
   switch (facing) {
     case FacingDir.Left: return 180
