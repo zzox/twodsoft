@@ -51,6 +51,15 @@ export const drawBarBg = () => {
 }
 
 export const drawBar = (percent:number) => {
-  context.fillStyle = '#14a02e'
-  context.fillRect(3, Height - 12, Math.floor(42 * percent), 8)
+  if (percent >= 1.0) {
+    context.fillStyle = '#b4202a'
+  } else if (percent > 0.89) {
+    context.fillStyle = '#df3e23'
+  } else if (percent > 0.77) {
+    context.fillStyle = '#14a02e'
+  } else {
+    context.fillStyle = '#1a7a3e'
+  }
+
+  context.fillRect(3, Height - 12, Math.floor(42 * Math.min(percent, 1.0)), 8)
 }
