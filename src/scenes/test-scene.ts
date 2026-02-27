@@ -323,7 +323,9 @@ export class Scene {
     const vel = this.guy.state === T$.PreThrow ? guyRunVel / 2 : guyRunVel
     if (!touchingGround) {
       let targetAngle = dirToAngle[xvel + 1][yvel + 1]
-      if (Math.abs(this.guy.angle - targetAngle) > 180) {
+      if (this.guy.angle - targetAngle > 180) {
+        targetAngle += 360
+      } else if (this.guy.angle - targetAngle < -180) {
         targetAngle -= 360
       }
       const angleDiff = Math.abs(this.guy.angle - targetAngle)
