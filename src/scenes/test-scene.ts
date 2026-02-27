@@ -284,7 +284,7 @@ export class Scene {
       this.guyThrow()
     }
 
-    if (this.guy.state === T$.None && justPressed.get('v')/* && keys.get('v') */) {
+    if (this.guy.state === T$.None && justPressed.get('c')/* && keys.get('v') */) {
       if (!this.inventory) {
         if (this.guy.pos.z === 0) {
           this.guyPickUp()
@@ -292,8 +292,8 @@ export class Scene {
           // TODO: buffer
           console.warn('cant pick up in air')
         }
-      } else if (justPressed.get('v')) {
-        this.guyDrop()
+      } else if (justPressed.get('c')) {
+        throw new Error('shouldnt be here')
       }
     }
 
@@ -317,6 +317,9 @@ export class Scene {
     // don't do anything with player vel if we are recovering from throwing
     // while in the air
     if (this.guy.state === T$.Throw) {
+      if (touchingGround) {
+        this.guy.vel = 0
+      }
       return
     }
 
