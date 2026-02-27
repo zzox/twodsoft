@@ -221,7 +221,7 @@ export class Scene {
     drawBar(percent/*, color*/)
 
     // drawBarTop() vvv
-    getContext().globalAlpha = 0.5
+    getContext().globalAlpha = 0.8
     drawSprite(32, Height - 16, 51)
     getContext().globalAlpha = 1.0
   }
